@@ -1,4 +1,7 @@
 # Fichier : backend/main.py
+
+from dotenv import load_dotenv
+load_dotenv()  # chargement de.env 
 import os
 from contextlib import asynccontextmanager
 
@@ -9,6 +12,8 @@ from pydantic import BaseModel
 from agent.graph import build_graph
 
 
+
+from contextlib import asynccontextmanager
 # ─────────────────────────────────────────────────────────────────────────────
 # LIFESPAN : compile le graph une seule fois au démarrage
 # ─────────────────────────────────────────────────────────────────────────────
