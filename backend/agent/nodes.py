@@ -2,7 +2,7 @@
 import json
 import re
 from langchain_openai import ChatOpenAI
-from langchain.schema import HumanMessage, SystemMessage  # ✅ Fix : SystemMessage ajouté
+from langchain_core.messages import HumanMessage, SystemMessage
 
 from agent.state import AgentState
 
