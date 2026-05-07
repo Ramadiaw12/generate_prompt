@@ -1,0 +1,17 @@
+[project]
+name = "prompt-eng"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "dotenv>=0.9.9",
+    "fastapi>=0.136.1",
+    "langchain>=1.2.17",
+    "langchain-community>=0.4.1",
+    "langchain-openai>=1.2.1",
+    "langgraph>=1.1.10",
+    "passlib[bcrypt]>=1.7.4",
+    "python-jose[cryptography]>=3.5.0",
+    "sqlmodel>=0.0.38",
+]

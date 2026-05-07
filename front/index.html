@@ -1,0 +1,1211 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Engineering — Interactive Workflow</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #f7f4ef;
+  --ink:       #1a1612;
+  --muted:     #8a857d;
+  --card:      #ffffff;
+  --border:    #e2ddd6;
+
+  --amber:     #e8740c;
+  --amber-lt:  #fff0e0;
+  --amber-md:  #ffd9a8;
+
+  --blue:      #1a5fb4;
+  --blue-lt:   #e8f0fc;
+  --blue-md:   #a8c4f0;
+
+  --green:     #276f4c;
+  --green-lt:  #e4f5ec;
+  --green-md:  #9fd6b8;
+
+  --rose:      #b5193b;
+  --rose-lt:   #fce8ed;
+  --rose-md:   #f0a8b8;
+
+  --teal:      #0f7070;
+  --teal-lt:   #e0f5f5;
+  --teal-md:   #8fd5d5;
+
+  --shadow-sm: 0 2px 8px rgba(26,22,18,.08);
+  --shadow-md: 0 6px 24px rgba(26,22,18,.12);
+  --shadow-lg: 0 16px 48px rgba(26,22,18,.18);
+  --r: 14px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Instrument Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 0;
+}
+
+/* ── Top Nav ── */
+.topnav {
+  position: fixed; top: 0; left: 0; right: 0;
+  z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .9rem 2rem;
+  background: rgba(247,244,239,.85);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+.topnav-logo {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1rem; color: var(--ink);
+  display: flex; align-items: center; gap: .5rem;
+}
+.topnav-logo span {
+  font-family: 'DM Mono', monospace;
+  font-size: .62rem; color: var(--amber);
+  letter-spacing: .1em; text-transform: uppercase;
+  background: var(--amber-lt);
+  padding: .2em .6em; border-radius: 100px;
+}
+.topnav-right { display: flex; align-items: center; gap: .75rem; }
+
+/* user pill when logged in */
+.user-pill {
+  display: none;
+  align-items: center; gap: .5rem;
+  font-family: 'DM Mono', monospace;
+  font-size: .7rem; color: var(--muted);
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: .35em .9em;
+}
+.user-pill.show { display: flex; }
+.user-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--green);
+}
+
+.btn {
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: .8rem; font-weight: 600;
+  border: none; cursor: pointer;
+  border-radius: 100px;
+  padding: .5em 1.2em;
+  transition: all .18s;
+}
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+.btn-ghost:hover { border-color: var(--ink); color: var(--ink); }
+.btn-amber {
+  background: var(--amber);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(232,116,12,.3);
+}
+.btn-amber:hover { background: #c9620a; transform: translateY(-1px); box-shadow: 0 4px 14px rgba(232,116,12,.4); }
+.btn-ink {
+  background: var(--ink);
+  color: #fff;
+}
+.btn-ink:hover { background: #2e2820; transform: translateY(-1px); }
+.btn-outline-rose {
+  background: transparent;
+  border: 1px solid var(--rose);
+  color: var(--rose);
+  font-size: .72rem;
+}
+.btn-outline-rose:hover { background: var(--rose-lt); }
+
+/* ── Header ── */
+header {
+  padding: 7rem 2rem 2rem;
+  text-align: center;
+  position: relative; z-index: 1;
+}
+header .eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: .7rem; font-weight: 500;
+  letter-spacing: .18em; text-transform: uppercase;
+  color: var(--amber); margin-bottom: .8rem;
+}
+header h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(2rem, 5vw, 3.6rem);
+  line-height: 1.1; color: var(--ink);
+}
+header h1 em { font-style: italic; color: var(--amber); }
+header p {
+  margin-top: .8rem; color: var(--muted);
+  font-size: .9rem; max-width: 520px;
+  margin-inline: auto; line-height: 1.6;
+}
+
+/* ── Generate Section ── */
+#generate-section {
+  position: relative; z-index: 1;
+  max-width: 780px; margin: 0 auto;
+  padding: 0 1.5rem 2.5rem;
+}
+
+.gen-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 2rem;
+  box-shadow: var(--shadow-md);
+  position: relative; overflow: hidden;
+}
+.gen-card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--amber), var(--blue), var(--teal));
+}
+
+.gen-card-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1.4rem;
+}
+.gen-card-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.25rem; color: var(--ink);
+}
+.gen-card-title em { font-style: italic; color: var(--amber); }
+
+/* locked state */
+.gen-locked {
+  display: flex; flex-direction: column;
+  align-items: center; text-align: center;
+  padding: 2rem 1rem;
+  gap: 1rem;
+}
+.gen-locked-icon {
+  font-size: 2.5rem; line-height: 1;
+}
+.gen-locked p {
+  color: var(--muted); font-size: .88rem; line-height: 1.6;
+  max-width: 320px;
+}
+.gen-locked-btns { display: flex; gap: .75rem; flex-wrap: wrap; justify-content: center; }
+
+/* input area */
+.gen-input-wrap { display: none; }
+.gen-input-wrap.show { display: block; }
+
+.gen-textarea {
+  width: 100%;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: .9rem; color: var(--ink);
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  resize: vertical; min-height: 110px;
+  transition: border-color .18s, box-shadow .18s;
+  outline: none; line-height: 1.6;
+}
+.gen-textarea::placeholder { color: var(--muted); }
+.gen-textarea:focus {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 3px rgba(232,116,12,.12);
+}
+
+.gen-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-top: 1rem; flex-wrap: wrap; gap: .75rem;
+}
+.gen-hint {
+  font-family: 'DM Mono', monospace;
+  font-size: .65rem; color: var(--muted);
+  letter-spacing: .05em;
+}
+.gen-submit {
+  display: flex; align-items: center; gap: .5rem;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: .85rem; font-weight: 600;
+  background: var(--amber); color: #fff;
+  border: none; border-radius: 100px;
+  padding: .6em 1.5em; cursor: pointer;
+  box-shadow: 0 3px 12px rgba(232,116,12,.35);
+  transition: all .18s;
+}
+.gen-submit:hover:not(:disabled) {
+  background: #c9620a; transform: translateY(-1px);
+  box-shadow: 0 5px 18px rgba(232,116,12,.45);
+}
+.gen-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+.gen-submit svg { width: 16px; height: 16px; }
+
+/* spinner */
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Results ── */
+#results-section {
+  display: none;
+  position: relative; z-index: 1;
+  max-width: 780px; margin: 0 auto;
+  padding: 0 1.5rem 3rem;
+}
+#results-section.show { display: block; }
+
+.results-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1.2rem;
+}
+.results-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.1rem; color: var(--ink);
+}
+.results-meta {
+  display: flex; gap: .5rem; flex-wrap: wrap;
+}
+.meta-chip {
+  font-family: 'DM Mono', monospace;
+  font-size: .62rem; letter-spacing: .07em;
+  padding: .25em .7em; border-radius: 100px;
+  border: 1px solid var(--border);
+  background: var(--card); color: var(--muted);
+}
+.meta-chip.domain { border-color: var(--blue); color: var(--blue); background: var(--blue-lt); }
+.meta-chip.complexity { border-color: var(--green); color: var(--green); background: var(--green-lt); }
+
+/* sections grid */
+.sections-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: .9rem;
+  margin-bottom: 1rem;
+}
+@media (max-width: 600px) { .sections-grid { grid-template-columns: 1fr; } }
+
+.section-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.2rem 1.3rem;
+  box-shadow: var(--shadow-sm);
+}
+.section-card.full { grid-column: 1 / -1; }
+.section-card-label {
+  font-family: 'DM Mono', monospace;
+  font-size: .6rem; letter-spacing: .14em; text-transform: uppercase;
+  margin-bottom: .5rem;
+  display: flex; align-items: center; gap: .4rem;
+}
+.section-card-label::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor; flex-shrink: 0;
+}
+.section-card-text {
+  font-size: .84rem; color: var(--ink);
+  line-height: 1.65;
+}
+
+/* final prompt card */
+.final-prompt-card {
+  background: var(--ink);
+  color: #fff;
+  border-radius: 16px;
+  padding: 1.6rem;
+  margin-top: .4rem;
+  position: relative;
+  box-shadow: var(--shadow-lg);
+}
+.final-prompt-label {
+  font-family: 'DM Mono', monospace;
+  font-size: .6rem; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--amber-md); margin-bottom: .8rem;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.final-prompt-text {
+  font-family: 'DM Mono', monospace;
+  font-size: .78rem; line-height: 1.75;
+  color: rgba(255,255,255,.85);
+  white-space: pre-wrap;
+  max-height: 300px; overflow-y: auto;
+}
+.final-prompt-text::-webkit-scrollbar { width: 4px; }
+.final-prompt-text::-webkit-scrollbar-track { background: rgba(255,255,255,.05); }
+.final-prompt-text::-webkit-scrollbar-thumb { background: rgba(255,255,255,.2); border-radius: 2px; }
+
+.copy-btn {
+  font-family: 'DM Mono', monospace;
+  font-size: .65rem; letter-spacing: .06em;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.15);
+  color: rgba(255,255,255,.7);
+  border-radius: 100px;
+  padding: .3em .8em; cursor: pointer;
+  transition: all .18s;
+}
+.copy-btn:hover { background: rgba(255,255,255,.2); color: #fff; }
+.copy-btn.copied { background: var(--green); border-color: var(--green); color: #fff; }
+
+/* error banner */
+.error-banner {
+  display: none;
+  background: var(--rose-lt);
+  border: 1px solid var(--rose-md);
+  border-radius: 10px;
+  padding: .8rem 1rem;
+  font-size: .82rem; color: var(--rose);
+  margin-top: .8rem;
+  font-family: 'DM Mono', monospace;
+}
+.error-banner.show { display: block; }
+
+/* ── Legend ── */
+.legend {
+  display: flex; flex-wrap: wrap; gap: .6rem;
+  justify-content: center;
+  padding: 0 1rem 2.5rem;
+  position: relative; z-index: 1;
+}
+.leg {
+  display: flex; align-items: center; gap: .4rem;
+  font-family: 'DM Mono', monospace;
+  font-size: .65rem; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted);
+  padding: .3em .8em;
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  background: var(--card);
+  box-shadow: var(--shadow-sm);
+}
+.leg-dot { width: 9px; height: 9px; border-radius: 50%; }
+
+/* ── Main canvas ── */
+.canvas-wrap {
+  position: relative; z-index: 1;
+  max-width: 1140px; margin: 0 auto;
+  padding: 0 1.5rem 5rem;
+}
+svg#flow { display: block; width: 100%; overflow: visible; }
+
+/* ── Node base ── */
+.node { cursor: pointer; }
+.node .card-bg {
+  transition: filter .22s ease, transform .22s ease;
+  filter: drop-shadow(0 3px 8px rgba(26,22,18,.10));
+}
+.node:hover .card-bg {
+  filter: drop-shadow(0 8px 24px rgba(26,22,18,.22));
+  transform: translateY(-3px);
+  transform-box: fill-box; transform-origin: center bottom;
+}
+.node text { pointer-events: none; user-select: none; }
+.node .label { font-family: 'Instrument Sans', sans-serif; font-weight: 700; font-size: 13px; }
+.node .sublabel { font-family: 'DM Mono', monospace; font-size: 8.5px; opacity: .65; }
+.node .badge { font-family: 'DM Mono', monospace; font-size: 7px; letter-spacing: .09em; text-transform: uppercase; font-weight: 500; }
+
+/* ── Arrows ── */
+.arr { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.arr-flow { stroke-dasharray: 7 5; animation: flow 1.8s linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -60; } }
+
+@keyframes fadeSlideUp {
+  from { opacity:0; transform: translateY(20px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+.node { animation: fadeSlideUp .55s cubic-bezier(.22,1,.36,1) both; }
+.n1{animation-delay:.05s} .n2{animation-delay:.12s} .n3{animation-delay:.19s}
+.n4{animation-delay:.26s} .n5{animation-delay:.33s} .n6{animation-delay:.40s}
+.n7{animation-delay:.47s} .n8{animation-delay:.54s} .n9{animation-delay:.61s}
+.n10{animation-delay:.68s} .n11{animation-delay:.75s} .n12{animation-delay:.82s}
+
+/* ── Auth Modal ── */
+#auth-overlay {
+  position: fixed; inset: 0;
+  background: rgba(247,244,239,.75);
+  backdrop-filter: blur(10px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 300;
+  opacity: 0; pointer-events: none;
+  transition: opacity .2s;
+}
+#auth-overlay.open { opacity: 1; pointer-events: all; }
+
+#auth-modal {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  padding: 0;
+  max-width: 420px; width: 92%;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(28px) scale(.96);
+  transition: transform .28s cubic-bezier(.22,1,.36,1);
+  overflow: hidden;
+}
+#auth-overlay.open #auth-modal { transform: translateY(0) scale(1); }
+
+.auth-top {
+  padding: 2rem 2rem 1.4rem;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+.auth-pill {
+  display: inline-flex; gap: 0;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 3px;
+  margin-bottom: 1.2rem;
+}
+.auth-tab {
+  font-family: 'DM Mono', monospace;
+  font-size: .68rem; letter-spacing: .07em;
+  padding: .4em 1.2em; border-radius: 100px;
+  border: none; background: transparent;
+  color: var(--muted); cursor: pointer;
+  transition: all .18s;
+}
+.auth-tab.active {
+  background: var(--ink); color: #fff;
+}
+.auth-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.4rem; color: var(--ink);
+}
+.auth-sub {
+  font-size: .8rem; color: var(--muted);
+  margin-top: .3rem; line-height: 1.5;
+}
+.auth-close {
+  position: absolute; top: 1.4rem; right: 1.4rem;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--border); border: none; cursor: pointer;
+  font-size: .9rem; color: var(--muted);
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.auth-close:hover { background: var(--ink); color: #fff; }
+
+.auth-body { padding: 1.5rem 2rem 2rem; }
+
+.field { margin-bottom: 1rem; }
+.field label {
+  display: block;
+  font-family: 'DM Mono', monospace;
+  font-size: .62rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--muted); margin-bottom: .4rem;
+}
+.field input {
+  width: 100%;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: .88rem; color: var(--ink);
+  background: var(--bg);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: .65em .9em;
+  outline: none; transition: border-color .18s, box-shadow .18s;
+}
+.field input:focus {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 3px rgba(232,116,12,.12);
+}
+.field input::placeholder { color: var(--muted); }
+
+.auth-error {
+  display: none;
+  font-family: 'DM Mono', monospace;
+  font-size: .7rem; color: var(--rose);
+  background: var(--rose-lt);
+  border: 1px solid var(--rose-md);
+  border-radius: 8px;
+  padding: .5em .8em;
+  margin-bottom: .8rem;
+}
+.auth-error.show { display: block; }
+
+.auth-submit {
+  width: 100%; padding: .75em;
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: .9rem; font-weight: 600;
+  background: var(--amber); color: #fff;
+  border: none; border-radius: 12px; cursor: pointer;
+  box-shadow: 0 3px 12px rgba(232,116,12,.35);
+  transition: all .18s;
+  display: flex; align-items: center; justify-content: center; gap: .5rem;
+}
+.auth-submit:hover:not(:disabled) {
+  background: #c9620a; transform: translateY(-1px);
+}
+.auth-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+/* ── Node Modal ── */
+#overlay {
+  position: fixed; inset: 0;
+  background: rgba(247,244,239,.7);
+  backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200;
+  opacity: 0; pointer-events: none;
+  transition: opacity .2s;
+}
+#overlay.open { opacity: 1; pointer-events: all; }
+#modal {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 20px; padding: 0;
+  max-width: 500px; width: 92%;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(28px) scale(.95);
+  transition: transform .25s cubic-bezier(.22,1,.36,1), opacity .2s;
+  overflow: hidden;
+}
+#overlay.open #modal { transform: translateY(0) scale(1); }
+#modal-header {
+  padding: 1.6rem 1.8rem 1.2rem;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+#modal-bar { width: 40px; height: 4px; border-radius: 2px; margin-bottom: 1rem; }
+#modal-eyebrow { font-family: 'DM Mono', monospace; font-size: .65rem; letter-spacing: .14em; text-transform: uppercase; margin-bottom: .4rem; }
+#modal-title { font-family: 'DM Serif Display', serif; font-size: 1.35rem; line-height: 1.2; }
+#close-btn {
+  position: absolute; top: 1.2rem; right: 1.2rem;
+  width: 30px; height: 30px; border-radius: 50%;
+  background: var(--border); border: none; cursor: pointer;
+  font-size: 1rem; color: var(--muted);
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, color .15s;
+}
+#close-btn:hover { background: var(--ink); color: #fff; }
+#modal-body { padding: 1.4rem 1.8rem 1.8rem; }
+#modal-desc { font-size: .875rem; color: var(--muted); line-height: 1.65; margin-bottom: 1.2rem; }
+.modal-section { margin-bottom: 1rem; }
+.modal-section h3 { font-family: 'DM Mono', monospace; font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); margin-bottom: .5rem; }
+.chips { display: flex; flex-wrap: wrap; gap: .35rem; }
+.chip { font-family: 'DM Mono', monospace; font-size: .68rem; padding: .28em .75em; border-radius: 100px; border: 1px solid var(--border); background: var(--bg); color: var(--ink); }
+</style>
+</head>
+<body>
+
+<!-- ── Top Nav ── -->
+<nav class="topnav">
+  <div class="topnav-logo">
+    Prompt <span>engineering</span>
+  </div>
+  <div class="topnav-right">
+    <div class="user-pill" id="user-pill">
+      <div class="user-dot"></div>
+      <span id="user-email-display"></span>
+    </div>
+    <button class="btn btn-ghost" id="nav-login-btn" onclick="openAuth('login')">Se connecter</button>
+    <button class="btn btn-amber" id="nav-signup-btn" onclick="openAuth('signup')">Commencer →</button>
+    <button class="btn btn-outline-rose" id="nav-logout-btn" style="display:none" onclick="logout()">Déconnexion</button>
+  </div>
+</nav>
+
+<header>
+  <div class="eyebrow">Workflow interactif</div>
+  <h1>Prompt <em>Engineering</em></h1>
+  <p>Cliquez sur chaque bloc pour explorer ses paramètres, entrées et sorties. Les flèches montrent le flux de données.</p>
+</header>
+
+<!-- ── Generate Section ── -->
+<div id="generate-section">
+  <div class="gen-card">
+    <div class="gen-card-header">
+      <div class="gen-card-title">Générer votre <em>prompt</em></div>
+    </div>
+
+    <!-- Locked (not authenticated) -->
+    <div class="gen-locked" id="gen-locked">
+      <div class="gen-locked-icon">🔒</div>
+      <p>Créez un compte gratuit pour générer des prompts structurés en 3 étapes : analyse, structuration et raffinement.</p>
+      <div class="gen-locked-btns">
+        <button class="btn btn-amber" onclick="openAuth('signup')">Créer un compte</button>
+        <button class="btn btn-ghost" onclick="openAuth('login')">Se connecter</button>
+      </div>
+    </div>
+
+    <!-- Input (authenticated) -->
+    <div class="gen-input-wrap" id="gen-input-wrap">
+      <textarea
+        class="gen-textarea"
+        id="user-input-field"
+        placeholder="Ex : Je veux un assistant qui m'aide à rédiger des emails professionnels en anglais, en adoptant un ton formel mais chaleureux..."
+        rows="4"
+      ></textarea>
+      <div class="gen-footer">
+        <span class="gen-hint">AGENT · 3 ÉTAPES · GPT-4o-mini</span>
+        <button class="gen-submit" id="gen-btn" onclick="generatePrompt()">
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M2 8h12M9 3l5 5-5 5"/>
+          </svg>
+          Générer
+        </button>
+      </div>
+      <div class="error-banner" id="gen-error"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Results Section ── -->
+<div id="results-section">
+  <div class="results-header">
+    <div class="results-title">Prompt structuré</div>
+    <div class="results-meta">
+      <span class="meta-chip" id="meta-intent"></span>
+      <span class="meta-chip domain" id="meta-domain"></span>
+      <span class="meta-chip complexity" id="meta-complexity"></span>
+    </div>
+  </div>
+
+  <div class="sections-grid">
+    <div class="section-card">
+      <div class="section-card-label" style="color:var(--blue)">Rôle</div>
+      <div class="section-card-text" id="res-role"></div>
+    </div>
+    <div class="section-card">
+      <div class="section-card-label" style="color:var(--teal)">Contexte</div>
+      <div class="section-card-text" id="res-context"></div>
+    </div>
+    <div class="section-card full">
+      <div class="section-card-label" style="color:var(--green)">Tâche</div>
+      <div class="section-card-text" id="res-task"></div>
+    </div>
+    <div class="section-card">
+      <div class="section-card-label" style="color:var(--amber)">Format de sortie</div>
+      <div class="section-card-text" id="res-output-format"></div>
+    </div>
+    <div class="section-card">
+      <div class="section-card-label" style="color:var(--rose)">Contraintes</div>
+      <div class="section-card-text" id="res-constraints"></div>
+    </div>
+  </div>
+
+  <div class="final-prompt-card">
+    <div class="final-prompt-label">
+      <span>Prompt final — prêt à l'emploi</span>
+      <button class="copy-btn" id="copy-btn" onclick="copyPrompt()">Copier</button>
+    </div>
+    <div class="final-prompt-text" id="res-full-prompt"></div>
+  </div>
+</div>
+
+<!-- ── Legend ── -->
+<div class="legend">
+  <div class="leg"><div class="leg-dot" style="background:#e8740c"></div> Paramètre</div>
+  <div class="leg"><div class="leg-dot" style="background:#1a5fb4"></div> Structure Prompt</div>
+  <div class="leg"><div class="leg-dot" style="background:#276f4c"></div> Contenu Prompt</div>
+  <div class="leg"><div class="leg-dot" style="background:#b5193b"></div> Type de prompt</div>
+  <div class="leg"><div class="leg-dot" style="background:#0f7070"></div> Entrée utilisateur</div>
+</div>
+
+<!-- ── SVG Flow (unchanged) ── -->
+<div class="canvas-wrap">
+<svg id="flow" viewBox="0 0 1060 820" xmlns="http://www.w3.org/2000/svg">
+<defs>
+  <marker id="ah-amber"  markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5z" fill="#e8740c"/></marker>
+  <marker id="ah-blue"   markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5z" fill="#1a5fb4"/></marker>
+  <marker id="ah-green"  markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5z" fill="#276f4c"/></marker>
+  <marker id="ah-rose"   markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5z" fill="#b5193b"/></marker>
+  <marker id="ah-teal"   markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5z" fill="#0f7070"/></marker>
+  <marker id="ah-muted"  markerWidth="7" markerHeight="7" refX="5" refY="3.5" orient="auto"><path d="M0,0 L0,7 L7,3.5z" fill="#8a857d"/></marker>
+  <pattern id="dots" width="22" height="22" patternUnits="userSpaceOnUse">
+    <circle cx="1" cy="1" r="1" fill="#e2ddd6"/>
+  </pattern>
+</defs>
+<rect width="1060" height="820" fill="url(#dots)" opacity=".5"/>
+<text x="44" y="30" font-family="DM Mono,monospace" font-size="8" fill="#8a857d" letter-spacing=".12em">PARAMÈTRES</text>
+<text x="340" y="30" font-family="DM Mono,monospace" font-size="8" fill="#8a857d" letter-spacing=".12em">STRUCTURE DU PROMPT</text>
+<text x="720" y="30" font-family="DM Mono,monospace" font-size="8" fill="#8a857d" letter-spacing=".12em">SORTIES / TYPES</text>
+<line x1="310" y1="20" x2="310" y2="800" stroke="#e2ddd6" stroke-width="1" stroke-dasharray="4 4"/>
+<line x1="680" y1="20" x2="680" y2="800" stroke="#e2ddd6" stroke-width="1" stroke-dasharray="4 4"/>
+<path class="arr arr-flow" d="M208,130 L340,200" stroke="#e8740c" stroke-width="2" marker-end="url(#ah-amber)" style="animation-delay:0s"/>
+<path class="arr arr-flow" d="M208,225 L340,230" stroke="#e8740c" stroke-width="2" marker-end="url(#ah-amber)" style="animation-delay:.3s"/>
+<path class="arr arr-flow" d="M208,315 L340,260" stroke="#e8740c" stroke-width="2" marker-end="url(#ah-amber)" style="animation-delay:.6s"/>
+<path class="arr arr-flow" d="M208,405 L340,285" stroke="#e8740c" stroke-width="2" marker-end="url(#ah-amber)" style="animation-delay:.9s"/>
+<path class="arr arr-flow" d="M500,195 L500,310" stroke="#1a5fb4" stroke-width="2.5" marker-end="url(#ah-blue)" style="animation-delay:.2s"/>
+<path class="arr arr-flow" d="M500,390 L500,470" stroke="#276f4c" stroke-width="2.5" marker-end="url(#ah-green)" style="animation-delay:.4s"/>
+<path class="arr arr-flow" d="M500,550 L500,630" stroke="#0f7070" stroke-width="2.5" marker-end="url(#ah-teal)" style="animation-delay:.6s"/>
+<path class="arr" d="M650,350 L715,350" stroke="#276f4c" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#ah-green)"/>
+<path class="arr" d="M650,430 L715,390" stroke="#276f4c" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#ah-green)"/>
+<path class="arr" d="M650,590 L715,620" stroke="#0f7070" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#ah-teal)"/>
+<path class="arr arr-flow" d="M665,180 L730,140" stroke="#b5193b" stroke-width="2" marker-end="url(#ah-rose)" style="animation-delay:.5s"/>
+<path class="arr arr-flow" d="M665,200 L730,220" stroke="#b5193b" stroke-width="2" marker-end="url(#ah-rose)" style="animation-delay:.8s"/>
+<path class="arr arr-flow" d="M420,680 C400,730 460,760 500,700" stroke="#0f7070" stroke-width="2" marker-end="url(#ah-teal)" style="animation-delay:1s"/>
+
+<g class="node n1" data-id="max-tokens">
+  <rect class="card-bg" x="28" y="90" width="180" height="70" rx="12" fill="#fff0e0" stroke="#e8740c" stroke-width="1.5"/>
+  <text class="label" x="118" y="120" text-anchor="middle" fill="#e8740c">Max Tokens</text>
+  <text class="sublabel" x="118" y="137" text-anchor="middle" fill="#c4600a">input + output length</text>
+  <text class="badge" x="38" y="108" fill="#e8740c">PARAM</text>
+</g>
+<g class="node n2" data-id="temperature">
+  <rect class="card-bg" x="28" y="185" width="180" height="70" rx="12" fill="#fff0e0" stroke="#e8740c" stroke-width="1.5"/>
+  <text class="label" x="118" y="215" text-anchor="middle" fill="#e8740c">Temperature</text>
+  <text class="sublabel" x="118" y="232" text-anchor="middle" fill="#c4600a">randomness control</text>
+  <text class="badge" x="38" y="203" fill="#e8740c">PARAM</text>
+</g>
+<g class="node n3" data-id="top-p">
+  <rect class="card-bg" x="28" y="280" width="180" height="70" rx="12" fill="#fff0e0" stroke="#e8740c" stroke-width="1.5"/>
+  <text class="label" x="118" y="310" text-anchor="middle" fill="#e8740c">Top P</text>
+  <text class="sublabel" x="118" y="327" text-anchor="middle" fill="#c4600a">nucleus sampling</text>
+  <text class="badge" x="38" y="298" fill="#e8740c">PARAM</text>
+</g>
+<g class="node n4" data-id="freq-penalty">
+  <rect class="card-bg" x="28" y="375" width="180" height="70" rx="12" fill="#fff0e0" stroke="#e8740c" stroke-width="1.5"/>
+  <text class="label" x="118" y="402" text-anchor="middle" fill="#e8740c">Frequency</text>
+  <text class="label" x="118" y="419" text-anchor="middle" fill="#e8740c">Penalty</text>
+  <text class="sublabel" x="118" y="436" text-anchor="middle" fill="#c4600a">reduce repetition</text>
+  <text class="badge" x="38" y="393" fill="#e8740c">PARAM</text>
+</g>
+<g class="node n5" data-id="prompt-central">
+  <rect class="card-bg" x="328" y="150" width="340" height="68" rx="14" fill="#1a5fb4" stroke="#1a5fb4" stroke-width="0"/>
+  <text class="label" x="498" y="181" text-anchor="middle" fill="#fff" font-size="16">Prompt</text>
+  <text class="sublabel" x="498" y="200" text-anchor="middle" fill="#a8c4f0">Parameters ↔ Structure</text>
+  <text class="badge" x="338" y="167" fill="#a8c4f0">CORE</text>
+</g>
+<g class="node n6" data-id="system-msg">
+  <rect class="card-bg" x="328" y="310" width="330" height="80" rx="12" fill="#e4f5ec" stroke="#276f4c" stroke-width="1.5"/>
+  <text class="label" x="493" y="338" text-anchor="middle" fill="#276f4c">System Message</text>
+  <text class="sublabel" x="493" y="358" text-anchor="middle" fill="#276f4c">instructions · format · chain-of-thought</text>
+  <text class="sublabel" x="493" y="375" text-anchor="middle" fill="#276f4c">Fixed part of prompt</text>
+  <text class="badge" x="338" y="326" fill="#276f4c">FIXED</text>
+</g>
+<g class="node n7" data-id="few-shot-ex">
+  <rect class="card-bg" x="328" y="468" width="330" height="80" rx="12" fill="#e4f5ec" stroke="#276f4c" stroke-width="1.5"/>
+  <text class="label" x="493" y="496" text-anchor="middle" fill="#276f4c">Few Shot Examples</text>
+  <text class="sublabel" x="493" y="516" text-anchor="middle" fill="#276f4c">Input → Output exemplars</text>
+  <text class="sublabel" x="493" y="533" text-anchor="middle" fill="#276f4c">Outputs need not be golden</text>
+  <text class="badge" x="338" y="484" fill="#276f4c">FIXED</text>
+</g>
+<g class="node n8" data-id="user-input">
+  <rect class="card-bg" x="328" y="626" width="330" height="76" rx="12" fill="#e0f5f5" stroke="#0f7070" stroke-width="1.5"/>
+  <text class="label" x="493" y="654" text-anchor="middle" fill="#0f7070">User Input</text>
+  <text class="sublabel" x="493" y="674" text-anchor="middle" fill="#0f7070">format from system message</text>
+  <text class="sublabel" x="493" y="691" text-anchor="middle" fill="#0f7070">Variable part of prompt</text>
+  <text class="badge" x="338" y="642" fill="#0f7070">VARIABLE</text>
+</g>
+<g class="node n9" data-id="zero-shot">
+  <rect class="card-bg" x="730" y="96" width="200" height="68" rx="12" fill="#fce8ed" stroke="#b5193b" stroke-width="1.5"/>
+  <text class="label" x="830" y="124" text-anchor="middle" fill="#b5193b">Zero Shot</text>
+  <text class="label" x="830" y="141" text-anchor="middle" fill="#b5193b">Prompt</text>
+  <text class="sublabel" x="830" y="157" text-anchor="middle" fill="#b5193b">no examples needed</text>
+  <text class="badge" x="740" y="114" fill="#b5193b">TYPE</text>
+</g>
+<g class="node n10" data-id="few-shot-out">
+  <rect class="card-bg" x="730" y="192" width="200" height="68" rx="12" fill="#fce8ed" stroke="#b5193b" stroke-width="1.5"/>
+  <text class="label" x="830" y="220" text-anchor="middle" fill="#b5193b">Few Shot</text>
+  <text class="label" x="830" y="237" text-anchor="middle" fill="#b5193b">Prompt</text>
+  <text class="sublabel" x="830" y="253" text-anchor="middle" fill="#b5193b">guided by examples</text>
+  <text class="badge" x="740" y="210" fill="#b5193b">TYPE</text>
+</g>
+<g class="node n11" data-id="fixed-part">
+  <rect class="card-bg" x="730" y="316" width="200" height="120" rx="12" fill="#e4f5ec" stroke="#276f4c" stroke-width="1.5" stroke-dasharray="5 3"/>
+  <text class="label" x="830" y="358" text-anchor="middle" fill="#276f4c">Fixed Part</text>
+  <text class="sublabel" x="830" y="378" text-anchor="middle" fill="#276f4c">System Message</text>
+  <text class="sublabel" x="830" y="395" text-anchor="middle" fill="#276f4c">Few Shot Examples</text>
+  <text class="sublabel" x="830" y="412" text-anchor="middle" fill="#276f4c">Stable across requests</text>
+  <text class="badge" x="740" y="334" fill="#276f4c">OUTPUT</text>
+</g>
+<g class="node n12" data-id="variable-part">
+  <rect class="card-bg" x="730" y="594" width="200" height="90" rx="12" fill="#e0f5f5" stroke="#0f7070" stroke-width="1.5" stroke-dasharray="5 3"/>
+  <text class="label" x="830" y="628" text-anchor="middle" fill="#0f7070">Variable Part</text>
+  <text class="sublabel" x="830" y="648" text-anchor="middle" fill="#0f7070">User Input only</text>
+  <text class="sublabel" x="830" y="665" text-anchor="middle" fill="#0f7070">Changes every request</text>
+  <text class="badge" x="740" y="612" fill="#0f7070">OUTPUT</text>
+</g>
+<g class="node" data-id="prompt-types" style="animation-delay:.9s">
+  <rect class="card-bg" x="28" y="510" width="250" height="250" rx="14" fill="#fff" stroke="#e2ddd6" stroke-width="1.5"/>
+  <text x="153" y="540" text-anchor="middle" font-family="DM Serif Display,serif" font-size="13" fill="#1a1612">Types de Prompt</text>
+  <circle cx="48" cy="562" r="4" fill="#b5193b"/>
+  <text x="58" y="566" font-family="Instrument Sans,sans-serif" font-size="10" fill="#b5193b" font-weight="600">Instructional</text>
+  <text x="150" y="566" font-family="DM Mono,monospace" font-size="7.5" fill="#8a857d">Prompt pédagogique</text>
+  <circle cx="48" cy="588" r="4" fill="#b5193b"/>
+  <text x="58" y="592" font-family="Instrument Sans,sans-serif" font-size="10" fill="#b5193b" font-weight="600">Reasoning</text>
+  <text x="142" y="592" font-family="DM Mono,monospace" font-size="7.5" fill="#8a857d">logical deduction</text>
+  <circle cx="48" cy="614" r="4" fill="#b5193b"/>
+  <text x="58" y="618" font-family="Instrument Sans,sans-serif" font-size="10" fill="#b5193b" font-weight="600">Induction</text>
+  <text x="137" y="618" font-family="DM Mono,monospace" font-size="7.5" fill="#8a857d">pattern recognition</text>
+  <circle cx="48" cy="640" r="4" fill="#b5193b"/>
+  <text x="58" y="644" font-family="Instrument Sans,sans-serif" font-size="10" fill="#b5193b" font-weight="600">Paraphrasing</text>
+  <text x="155" y="644" font-family="DM Mono,monospace" font-size="7.5" fill="#8a857d">reformulation</text>
+  <circle cx="48" cy="666" r="4" fill="#b5193b"/>
+  <text x="58" y="670" font-family="Instrument Sans,sans-serif" font-size="10" fill="#b5193b" font-weight="600">Chain-of-Thought</text>
+  <text x="170" y="670" font-family="DM Mono,monospace" font-size="7.5" fill="#8a857d">COT</text>
+  <rect x="38" y="690" width="220" height="60" rx="8" fill="#f7f4ef" stroke="#e2ddd6" stroke-width="1"/>
+  <text x="148" y="707" text-anchor="middle" font-family="DM Mono,monospace" font-size="7" fill="#8a857d" letter-spacing=".08em">CONTEXT WINDOWS</text>
+  <text x="48" y="722" font-family="DM Mono,monospace" font-size="8" fill="#1a1612">GPT-3.5-turbo</text>
+  <text x="248" y="722" text-anchor="end" font-family="DM Mono,monospace" font-size="8" fill="#e8740c" font-weight="500">4 096</text>
+  <text x="48" y="736" font-family="DM Mono,monospace" font-size="8" fill="#1a1612">GPT-4-turbo</text>
+  <text x="248" y="736" text-anchor="end" font-family="DM Mono,monospace" font-size="8" fill="#e8740c" font-weight="500">128 000</text>
+  <text x="48" y="750" font-family="DM Mono,monospace" font-size="8" fill="#1a1612">Mixtral-8×7B</text>
+  <text x="248" y="750" text-anchor="end" font-family="DM Mono,monospace" font-size="8" fill="#e8740c" font-weight="500">128 000</text>
+</g>
+</svg>
+</div>
+
+<!-- ── Node Modal ── -->
+<div id="overlay">
+  <div id="modal">
+    <div id="modal-header">
+      <div id="modal-bar"></div>
+      <div id="modal-eyebrow"></div>
+      <h2 id="modal-title"></h2>
+      <button id="close-btn" aria-label="Fermer">×</button>
+    </div>
+    <div id="modal-body">
+      <p id="modal-desc"></p>
+      <div class="modal-section" id="sec-inputs">
+        <h3>Entrées</h3>
+        <div class="chips" id="modal-inputs"></div>
+      </div>
+      <div class="modal-section" id="sec-outputs">
+        <h3>Sorties / Effets</h3>
+        <div class="chips" id="modal-outputs"></div>
+      </div>
+      <div class="modal-section" id="sec-note">
+        <h3>À retenir</h3>
+        <div class="chips" id="modal-note"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Auth Modal ── -->
+<div id="auth-overlay">
+  <div id="auth-modal">
+    <div class="auth-top">
+      <div class="auth-pill">
+        <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Connexion</button>
+        <button class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Inscription</button>
+      </div>
+      <div class="auth-title" id="auth-title">Bon retour 👋</div>
+      <div class="auth-sub" id="auth-sub">Connectez-vous pour générer vos prompts.</div>
+      <button class="auth-close" onclick="closeAuth()">×</button>
+    </div>
+    <div class="auth-body">
+      <div class="auth-error" id="auth-error"></div>
+
+      <div class="field" id="field-name" style="display:none">
+        <label>Nom</label>
+        <input type="text" id="input-name" placeholder="Votre prénom" autocomplete="given-name"/>
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="input-email" placeholder="vous@exemple.com" autocomplete="email"/>
+      </div>
+      <div class="field">
+        <label>Mot de passe</label>
+        <input type="password" id="input-password" placeholder="••••••••" autocomplete="current-password"/>
+      </div>
+
+      <button class="auth-submit" id="auth-submit-btn" onclick="submitAuth()">
+        <span id="auth-btn-label">Se connecter</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// CONFIG — remplacez par votre URL backend
+// ══════════════════════════════════════════
+const API = 'http://localhost:8000';
+
+// ══════════════════════════════════════════
+// AUTH STATE
+// ══════════════════════════════════════════
+let currentMode = 'login'; // 'login' | 'signup'
+let authToken = localStorage.getItem('auth_token') || null;
+let userEmail = localStorage.getItem('user_email') || null;
+
+function isLoggedIn() { return !!authToken; }
+
+function updateUI() {
+  const loggedIn = isLoggedIn();
+
+  // nav
+  document.getElementById('nav-login-btn').style.display  = loggedIn ? 'none' : '';
+  document.getElementById('nav-signup-btn').style.display = loggedIn ? 'none' : '';
+  document.getElementById('nav-logout-btn').style.display = loggedIn ? '' : 'none';
+
+  // user pill
+  const pill = document.getElementById('user-pill');
+  if (loggedIn && userEmail) {
+    pill.classList.add('show');
+    document.getElementById('user-email-display').textContent = userEmail;
+  } else {
+    pill.classList.remove('show');
+  }
+
+  // generate card
+  document.getElementById('gen-locked').style.display     = loggedIn ? 'none' : '';
+  const wrap = document.getElementById('gen-input-wrap');
+  wrap.style.display = loggedIn ? 'block' : 'none';
+  wrap.classList.toggle('show', loggedIn);
+}
+
+// ── Auth Modal ──
+function openAuth(mode) {
+  switchTab(mode);
+  document.getElementById('auth-overlay').classList.add('open');
+}
+function closeAuth() {
+  document.getElementById('auth-overlay').classList.remove('open');
+  document.getElementById('auth-error').classList.remove('show');
+  clearAuthFields();
+}
+function clearAuthFields() {
+  ['input-name','input-email','input-password'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+}
+function switchTab(mode) {
+  currentMode = mode;
+  document.getElementById('tab-login').classList.toggle('active', mode === 'login');
+  document.getElementById('tab-signup').classList.toggle('active', mode === 'signup');
+  document.getElementById('field-name').style.display = mode === 'signup' ? 'block' : 'none';
+  document.getElementById('auth-title').textContent = mode === 'login' ? 'Bon retour 👋' : 'Créer un compte';
+  document.getElementById('auth-sub').textContent = mode === 'login'
+    ? 'Connectez-vous pour générer vos prompts.'
+    : 'Rejoignez la plateforme, c\'est gratuit.';
+  document.getElementById('auth-btn-label').textContent = mode === 'login' ? 'Se connecter' : 'Créer mon compte';
+  document.getElementById('auth-error').classList.remove('show');
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+async function submitAuth() {
+  const btn = document.getElementById('auth-submit-btn');
+  const email = document.getElementById('input-email').value.trim();
+  const password = document.getElementById('input-password').value;
+
+  if (!email || !password) { showAuthError('Veuillez remplir tous les champs.'); return; }
+
+  btn.disabled = true;
+  document.getElementById('auth-btn-label').textContent = '…';
+
+  try {
+    let res, data;
+
+    if (currentMode === 'signup') {
+      const name = document.getElementById('input-name').value.trim();
+      res = await fetch(`${API}/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, name })
+      });
+      data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Erreur inscription');
+      // After signup, auto-login
+      res = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ username: email, password })
+      });
+      data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Erreur connexion');
+    } else {
+      res = await fetch(`${API}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({ username: email, password })
+      });
+      data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Email ou mot de passe incorrect');
+    }
+
+    // Save token
+    authToken = data.access_token;
+    userEmail = email;
+    localStorage.setItem('auth_token', authToken);
+    localStorage.setItem('user_email', userEmail);
+
+    closeAuth();
+    updateUI();
+  } catch (err) {
+    showAuthError(err.message);
+  } finally {
+    btn.disabled = false;
+    document.getElementById('auth-btn-label').textContent =
+      currentMode === 'login' ? 'Se connecter' : 'Créer mon compte';
+  }
+}
+
+function logout() {
+  authToken = null; userEmail = null;
+  localStorage.removeItem('auth_token');
+  localStorage.removeItem('user_email');
+  document.getElementById('results-section').classList.remove('show');
+  updateUI();
+}
+
+// Close auth overlay on backdrop click
+document.getElementById('auth-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('auth-overlay')) closeAuth();
+});
+
+// ══════════════════════════════════════════
+// GENERATE PROMPT
+// ══════════════════════════════════════════
+async function generatePrompt() {
+  const input = document.getElementById('user-input-field').value.trim();
+  const errEl = document.getElementById('gen-error');
+  const btn   = document.getElementById('gen-btn');
+
+  errEl.classList.remove('show');
+  if (!input) { errEl.textContent = 'Décrivez ce que vous souhaitez accomplir.'; errEl.classList.add('show'); return; }
+
+  // Loading state
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Analyse en cours…';
+  document.getElementById('results-section').classList.remove('show');
+
+  try {
+    const res = await fetch(`${API}/generate-prompt`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ user_input: input })
+    });
+
+    if (res.status === 401) {
+      logout();
+      openAuth('login');
+      throw new Error('Session expirée, veuillez vous reconnecter.');
+    }
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Erreur serveur');
+
+    renderResults(data);
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 8h12M9 3l5 5-5 5"/></svg> Générer`;
+  }
+}
+
+function renderResults(data) {
+  // Meta chips
+  document.getElementById('meta-intent').textContent = data.intent;
+  document.getElementById('meta-domain').textContent = '⬡ ' + data.domain;
+  document.getElementById('meta-complexity').textContent = '◎ ' + data.complexity;
+
+  // Sections
+  document.getElementById('res-role').textContent          = data.role;
+  document.getElementById('res-context').textContent       = data.context;
+  document.getElementById('res-task').textContent          = data.task;
+  document.getElementById('res-output-format').textContent = data.output_format;
+  document.getElementById('res-constraints').textContent   = data.constraints;
+  document.getElementById('res-full-prompt').textContent   = data.full_prompt;
+
+  // Reset copy btn
+  const copyBtn = document.getElementById('copy-btn');
+  copyBtn.textContent = 'Copier';
+  copyBtn.classList.remove('copied');
+
+  document.getElementById('results-section').classList.add('show');
+  document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function copyPrompt() {
+  const text = document.getElementById('res-full-prompt').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-btn');
+    btn.textContent = '✓ Copié';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copier'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+// Enter key in textarea
+document.getElementById('user-input-field')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) generatePrompt();
+});
+
+// ══════════════════════════════════════════
+// NODE MODAL DATA
+// ══════════════════════════════════════════
+const DATA = {
+  "max-tokens": {
+    color:"#e8740c",tag:"Paramètre",title:"Max Tokens",
+    desc:"Définit la longueur maximale de la réponse en tokens. Un token correspond environ à 4 caractères en anglais (¾ de mot). Ce paramètre contrôle le coût et la verbosité de la réponse.",
+    inputs:["Entier (ex : 512, 1024, 4096)"],
+    outputs:["Longueur max du texte généré","Troncature automatique si dépassé"],
+    note:["Plus haut = réponse plus longue","Impact sur le coût API","Compte input + output"]
+  },
+  "temperature":{color:"#e8740c",tag:"Paramètre",title:"Temperature",desc:"Contrôle le degré de créativité et d'aléa dans les réponses. Une valeur basse (proche de 0) rend le modèle déterministe et factuel ; une valeur haute (>1) le rend créatif et imprévisible.",inputs:["Float entre 0.0 et 2.0"],outputs:["Distribution de probabilité sur les tokens","Variabilité de la réponse"],note:["0 = déterministe","1 = équilibré",">1 = créatif / aléatoire","Interagit avec Top P"]},
+  "top-p":{color:"#e8740c",tag:"Paramètre",title:"Top P (Nucleus Sampling)",desc:"Stratégie d'échantillonnage : le modèle considère uniquement les tokens dont la probabilité cumulée atteint P. Top P=0.9 signifie qu'on ignore les 10% de tokens les moins probables.",inputs:["Float entre 0.0 et 1.0"],outputs:["Ensemble de tokens candidats","Réponse plus ou moins diversifiée"],note:["0.1 = très focused","0.9 = large choix","Ne pas combiner avec Temperature élevée"]},
+  "freq-penalty":{color:"#e8740c",tag:"Paramètre",title:"Frequency Penalty",desc:"Pénalise les tokens déjà apparus dans le texte en proportion de leur fréquence. Réduit les répétitions et favorise la diversité lexicale dans les longues réponses.",inputs:["Float entre -2.0 et 2.0"],outputs:["Moins de répétitions de mots","Vocabulaire plus varié"],note:["0 = pas de pénalité",">0 = moins de répétitions","Utile pour les longues générations"]},
+  "prompt-central":{color:"#1a5fb4",tag:"Concept Central",title:"Prompt",desc:"Un prompt est un ensemble spécifique d'instructions envoyées à un LLM pour accomplir une tâche. Il combine des paramètres (qui contrôlent le comportement du modèle) et une structure (qui organise le contenu).",inputs:["Paramètres (Temperature, Tokens…)","Structure (System, Few Shot, User Input)","Clé API + Modèle cible"],outputs:["Réponse texte du LLM","Tokens générés","Métadonnées (usage, finish_reason)"],note:["= instruction + contexte + format","Qualité du prompt ∝ qualité réponse","L'engineering est itératif"]},
+  "system-msg":{color:"#276f4c",tag:"Structure — Fixe",title:"System Message",desc:"Instructions claires expliquant la tâche que le LLM doit accomplir. Doit inclure le format attendu de l'entrée utilisateur, le format de sortie attendu et une chaîne de pensée (chain-of-thought) pour guider le raisonnement.",inputs:["Description du rôle du LLM","Format d'entrée attendu","Format de sortie attendu","Règles et contraintes"],outputs:["Comportement du modèle cadré","Contexte persistant pour la session"],note:["Partie FIXE du prompt","Envoyé à chaque requête","Invisible pour l'utilisateur final"]},
+  "few-shot-ex":{color:"#276f4c",tag:"Structure — Fixe",title:"Few Shot Examples",desc:"Paires Input→Output qui délimitent la réponse attendue pour des entrées exemplaires. Les sorties n'ont pas besoin d'être parfaites ('golden') — elles servent à calibrer le style et le format.",inputs:["2 à 10 paires Input/Output","Exemples représentatifs du cas d'usage"],outputs:["LLM calibré sur le format","Réduction des hallucinations","Meilleure cohérence"],note:["0-shot = sans exemple","1-shot = 1 exemple","Few-shot = 2–10 exemples","More = better (jusqu'à un point)"]},
+  "user-input":{color:"#0f7070",tag:"Structure — Variable",title:"User Input",desc:"L'entrée présentée dans le format défini dans le System Message. C'est la seule partie du prompt qui change à chaque requête — le reste (System + Few Shot) reste fixe.",inputs:["Texte libre de l'utilisateur","Données structurées (JSON, CSV…)","Questions ou commandes"],outputs:["Réponse contextualisée du LLM","Résultat selon le format défini"],note:["Partie VARIABLE du prompt","Format dicté par le System Message","Validé avant envoi"]},
+  "zero-shot":{color:"#b5193b",tag:"Type de Prompt",title:"Zero Shot Prompt",desc:"Le modèle répond sans aucun exemple préalable. On se fie uniquement aux capacités de raisonnement du LLM pré-entraîné. Idéal pour les tâches simples et bien définies.",inputs:["Instruction seule","Aucun exemple fourni"],outputs:["Réponse basée uniquement sur pre-training","Variable selon le modèle"],note:["Simple et rapide","Moins fiable pour tâches complexes","Bon point de départ"]},
+  "few-shot-out":{color:"#b5193b",tag:"Type de Prompt",title:"Few Shot Prompt",desc:"Le modèle reçoit quelques exemples input/output avant de traiter la vraie requête. Cette technique 'in-context learning' améliore significativement la qualité et la cohérence.",inputs:["2 à 10 exemples structurés","Instruction de la tâche","Entrée réelle à traiter"],outputs:["Réponse alignée sur les exemples","Format respecté","Meilleure précision"],note:["Technique la plus efficace","Coût en tokens plus élevé","Exemples = patterns à imiter"]},
+  "fixed-part":{color:"#276f4c",tag:"Partie du Prompt",title:"Fixed Part of the Prompt",desc:"La partie stable du prompt qui ne change pas entre les requêtes. Elle contient le System Message et les Few Shot Examples. Elle définit les 'rails' dans lesquels le modèle doit raisonner.",inputs:["System Message rédigé","Few Shot Examples sélectionnés"],outputs:["Contexte stable pour le LLM","Comportement prévisible","Économie de tokens à terme"],note:["Peut être mis en cache (API)","Doit être testé et validé","Core de l'engineering"]},
+  "variable-part":{color:"#0f7070",tag:"Partie du Prompt",title:"Variable Part of the Prompt",desc:"La seule partie qui change d'une requête à l'autre : l'entrée utilisateur. Elle doit respecter le format défini dans le System Message pour garantir une réponse de qualité.",inputs:["Input utilisateur en temps réel","Format respectant le System Message"],outputs:["Requête complète envoyée au LLM","Réponse individualisée"],note:["Change à chaque appel","Doit être validée/sanitisée","Couplée à la Fixed Part"]},
+  "prompt-types":{color:"#b5193b",tag:"Référence",title:"Types de Prompt & Contexte",desc:"Cinq familles de prompts couvrent l'essentiel des cas d'usage. La fenêtre de contexte (context window) détermine combien de tokens le modèle peut traiter en une seule requête.",inputs:["Objectif de la tâche","Contraintes du modèle","Budget tokens disponible"],outputs:["Choix du type de prompt","Architecture du prompt optimisée"],note:["GPT-3.5 : 4 096 tokens","GPT-4-turbo : 128 000 tokens","Mixtral 8×7B : 128 000 tokens","1 token ≈ 4 caractères"]}
+};
+
+function chips(arr, el) {
+  el.innerHTML = '';
+  arr.forEach(t => {
+    const c = document.createElement('span');
+    c.className = 'chip'; c.textContent = t;
+    el.appendChild(c);
+  });
+}
+
+document.querySelectorAll('.node').forEach(n => {
+  n.addEventListener('click', () => {
+    const d = DATA[n.dataset.id]; if (!d) return;
+    document.getElementById('modal-bar').style.background = d.color;
+    document.getElementById('modal-eyebrow').style.color = d.color;
+    document.getElementById('modal-eyebrow').textContent = d.tag;
+    document.getElementById('modal-title').textContent = d.title;
+    document.getElementById('modal-desc').textContent = d.desc;
+    chips(d.inputs,  document.getElementById('modal-inputs'));
+    chips(d.outputs, document.getElementById('modal-outputs'));
+    chips(d.note,    document.getElementById('modal-note'));
+    document.getElementById('overlay').classList.add('open');
+  });
+});
+
+document.getElementById('close-btn').addEventListener('click', () =>
+  document.getElementById('overlay').classList.remove('open'));
+document.getElementById('overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('overlay'))
+    document.getElementById('overlay').classList.remove('open');
+});
+
+// ── Init ──
+updateUI();
+</script>
+</body>
+</html>
