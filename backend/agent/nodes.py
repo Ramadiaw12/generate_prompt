@@ -8,15 +8,14 @@ load_dotenv("../.env")  # chargement du .env avant os.getenv()
 
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
-
+from langchain_groq import ChatGroq
 from agent.state import AgentState
 
 # Modèle partagé entre tous les nodes
 # llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
-llm = ChatOpenAI(
-    model="grok-3",
-    api_key=os.getenv("XAI_API_KEY"),
-    base_url="https://api.x.ai/v1",
+llm = ChatGroq(
+    model="llama-3.3-70b-versatile",  # or "mixtral-8x7b-32768"
+    api_key=os.getenv("GROQ_API_KEY"),
     temperature=0,
 )
 

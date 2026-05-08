@@ -11,6 +11,7 @@ dependencies = [
     "langchain>=1.2.17",
     "langchain-community>=0.4.1",
     "langchain-core>=1.3.3",
+    "langchain-groq>=1.1.2",
     "langchain-openai>=1.2.1",
     "langgraph>=1.1.10",
     "passlib[bcrypt]>=1.7.4",
