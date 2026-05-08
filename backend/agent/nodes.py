@@ -1,4 +1,5 @@
-# Fichier : backend/agent/nodes.py
+# Fichier : backend/agent/nodes.py*
+import os
 import json
 import re
 from langchain_openai import ChatOpenAI
@@ -7,8 +8,13 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from agent.state import AgentState
 
 # Modèle partagé entre tous les nodes
-llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
-
+# llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+llm = ChatOpenAI(
+    model="grok-3",               
+    api_key=os.getenv("XAI_API_KEY"),
+    base_url="https://api.x.ai/v1",
+    temperature=0,
+)
 
 # ─────────────────────────────────────────────────────────────────────────────
 # NODE 1 : analyze_input

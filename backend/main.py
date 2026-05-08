@@ -1,7 +1,7 @@
 # Fichier : backend/main.py
 
 from dotenv import load_dotenv
-load_dotenv()  # ⚠️ Doit être en premier, avant tout import LangChain/OpenAI
+load_dotenv()  # Charge les variables d'environnement depuis le fichier .env    
 
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Depends
@@ -21,9 +21,9 @@ graph = None
 async def lifespan(app: FastAPI):
     global graph
     graph = build_graph()
-    print("✅ Agent graph compilé et prêt.")
+    print(" Agent graph compilé et prêt.")
     yield
-    print("🛑 Arrêt du serveur.")
+    print(" Arrêt du serveur.")
 
 # ─────────────────────────────────────────────────────────────────────────────
 # APP
@@ -43,7 +43,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth_router)  # ✅ enregistre /auth/register, /auth/login, /auth/me
+app.include_router(auth_router)  #  enregistre /auth/register, /auth/login, /auth/me
 
 # ─────────────────────────────────────────────────────────────────────────────
 # SCHEMAS
@@ -78,7 +78,7 @@ def health():
 @app.post("/generate-prompt", response_model=PromptResponse)
 async def generate_prompt(
     request: PromptRequest,
-    current_user: str = Depends(get_current_user)  # ✅ route protégée par JWT
+    current_user: str = Depends(get_current_user)  # route protégée par JWT
 ):
     if not request.user_input.strip():
         raise HTTPException(status_code=422, detail="Le champ user_input ne peut pas être vide.")
