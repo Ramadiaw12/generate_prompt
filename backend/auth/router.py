@@ -9,7 +9,7 @@ from passlib.context import CryptContext
 from pydantic import BaseModel, EmailStr
 
 # ─────────────────────────────────────────────────────────────────────────────
-# CONFIG — mettez ces valeurs dans votre .env en production
+# CONFIG — mettre les valeurs dans .env en production
 # ─────────────────────────────────────────────────────────────────────────────
 SECRET_KEY = "changez-moi-en-production-avec-openssl-rand-hex-32"
 ALGORITHM = "HS256"
@@ -68,7 +68,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         raise credentials_exception
 
 # ─────────────────────────────────────────────────────────────────────────────
-# DB SIMULATION — remplacez par votre vraie DB (SQLAlchemy, Supabase…)
+# DB SIMULATION — remplacez par vraie DB 
 # ─────────────────────────────────────────────────────────────────────────────
 # Dictionnaire en mémoire pour le développement.
 # En production : utilisez database.py avec SQLAlchemy ou une autre DB.
