@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://readme-typing-svg.demolab.com?font=DM+Serif+Display&size=32&duration=3000&pause=1000&color=E8740C&center=true&vCenter=true&width=600&lines=Prompt+Engineering+Platform;Build+better+prompts%2C+faster." alt="Typing SVG" />
+<img src="https://readme-typing-svg.demolab.com?font=DM+Serif+Display&size=32&duration=3000&pause=1000&color=E8740C&center=true&vCenter=true&width=600&lines=AI+Prompt+Engineering+Assistant;Build+better+prompts%2C+faster." alt="Typing SVG" />
 
 <br/>
 
