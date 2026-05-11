@@ -80,7 +80,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["https://prompt-craft26.netlify.app/"],
     # ✅ SÉCURISÉ : on accepte UNIQUEMENT le frontend local
     # En production : remplacez par votre vrai domaine
     # ex: ["https://mon-app.vercel.app"]
