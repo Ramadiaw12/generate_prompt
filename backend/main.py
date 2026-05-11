@@ -1,74 +1,64 @@
 # =============================================================================
 # Fichier : backend/main.py
-# Rôle    : Point d'entrée de l'API FastAPI
-#           - Démarre le serveur
-#           - Crée les tables PostgreSQL au démarrage
-#           - Enregistre les routes auth + generate-prompt
+# Rôle    : Point d'entrée FastAPI
+#           - PostgreSQL
+#           - Rate Limiting (slowapi)
+#           - JWT Auth
+#           - LangGraph Agent
 # Auteur  : DIAWANE Ramatoulaye
 # =============================================================================
 
 # ── Chargement du .env EN PREMIER ─────────────────────────────────────────────
 from dotenv import load_dotenv
 load_dotenv("../.env")
-# ⚠️ DOIT être avant tout import LangChain/OpenAI/SQLAlchemy
-# Sans ça, les variables d'environnement ne sont pas disponibles
+# ⚠️ Doit être avant tout import LangChain/SQLAlchemy
 
 # ── Imports ───────────────────────────────────────────────────────────────────
 
 from contextlib import asynccontextmanager
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+# Rate limiting — protection contre les attaques brute force
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+# Limiter          : gère les limites de requêtes par IP
+# get_remote_address : identifie l'IP de chaque visiteur
+# RateLimitExceeded : exception levée quand la limite est dépassée
+
 from agent.graph import build_graph
-# build_graph : compile le LangGraph une seule fois au démarrage
-
 from auth.router import router as auth_router, get_current_user
-# auth_router    : routes /auth/register, /auth/login, /auth/me
-# get_current_user : dépendance pour protéger les routes avec JWT
-
 from db.database import get_db, create_tables
-# get_db       : session PostgreSQL par requête
-# create_tables : crée les tables au démarrage si elles n'existent pas
+from models.schemas import PromptHistory, User
 
-from models.schemas import PromptHistory
-# PromptHistory : table PostgreSQL pour sauvegarder les prompts générés
+# ── Rate Limiter ──────────────────────────────────────────────────────────────
 
-from models.schemas import User
-# User : table PostgreSQL des utilisateurs
+limiter = Limiter(
+    key_func=get_remote_address,
+    # Identifie les utilisateurs par leur adresse IP
+    # Chaque IP a son propre compteur de requêtes
+)
+# Le limiter sera attaché à l'app FastAPI plus bas
 
 # ── Lifespan ──────────────────────────────────────────────────────────────────
 
 graph = None
-# Variable globale pour stocker le graph compilé
-# On le compile une seule fois au démarrage (pas à chaque requête)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Lifespan FastAPI : code exécuté au démarrage et à l'arrêt du serveur.
-
-    Au DÉMARRAGE (avant yield) :
-    - Crée les tables PostgreSQL si elles n'existent pas
-    - Compile le LangGraph agent
-
-    À L'ARRÊT (après yield) :
-    - Affiche un message de confirmation
+    Exécuté au démarrage et à l'arrêt du serveur.
+    Crée les tables PostgreSQL + compile le graph LangGraph.
     """
     global graph
-
-    # Crée les tables PostgreSQL (users + prompt_history)
-    # Si elles existent déjà → rien ne se passe, les données sont préservées
-    create_tables()
-
-    # Compile le LangGraph une seule fois
-    # (compilation = construction du graphe de nodes, coûteuse en temps)
-    graph = build_graph()
+    create_tables()        # crée users + prompt_history si elles n'existent pas
+    graph = build_graph()  # compile le LangGraph une seule fois
+    print("✅ Tables PostgreSQL créées / vérifiées.")
     print("✅ Agent graph compilé et prêt.")
-
-    yield  # le serveur tourne ici
-
+    yield
     print("🛑 Arrêt du serveur.")
 
 # ── Application FastAPI ───────────────────────────────────────────────────────
@@ -76,87 +66,97 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title="Prompt Engineer API",
     description="Génère des prompts structurés à partir d'une demande utilisateur.",
-    version="2.0.0",  # v2 : ajout PostgreSQL
+    version="2.0.0",
     lifespan=lifespan,
 )
+
+# Attache le rate limiter à l'app
+app.state.limiter = limiter
+# Gestionnaire d'erreur personnalisé quand la limite est dépassée
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+# Quand une IP dépasse sa limite → HTTP 429 Too Many Requests automatique
 
 # ── CORS ──────────────────────────────────────────────────────────────────────
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    # En production : remplacez "*" par votre domaine exact
+    allow_origins=["http://localhost:3000"],
+    # ✅ SÉCURISÉ : on accepte UNIQUEMENT le frontend local
+    # En production : remplacez par votre vrai domaine
     # ex: ["https://mon-app.vercel.app"]
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],
+    # On autorise uniquement GET et POST (pas DELETE, PUT non utilisés)
+    allow_headers=["Authorization", "Content-Type"],
+    # On autorise uniquement les headers nécessaires
 )
 
-# ── Enregistrement des routes auth ────────────────────────────────────────────
+# ── Routes ────────────────────────────────────────────────────────────────────
 
 app.include_router(auth_router)
-# Ajoute les routes : POST /auth/register, POST /auth/login, GET /auth/me
+# Ajoute /auth/register, /auth/login, /auth/me
 
 # ── Schémas Pydantic ──────────────────────────────────────────────────────────
 
 class PromptRequest(BaseModel):
     """Données reçues pour générer un prompt."""
-    user_input: str  # la demande brute de l'utilisateur
+    user_input: str
 
 class PromptResponse(BaseModel):
-    """Données renvoyées après génération du prompt."""
-    # Résultats de l'analyse (Node 1)
+    """Données renvoyées après génération."""
     intent: str
     domain: str
     complexity: str
-    # Sections structurées (Node 2)
     role: str
     context: str
     task: str
     output_format: str
     constraints: str
-    # Prompt final assemblé (Node 3)
     full_prompt: str
 
-# ── Routes ────────────────────────────────────────────────────────────────────
+# ── Routes publiques ──────────────────────────────────────────────────────────
 
 @app.get("/")
-def root():
-    """Route de sanity check — vérifie que le serveur tourne."""
+@limiter.limit("30/minute")
+# Maximum 30 requêtes par minute par IP sur cette route
+def root(request: Request):
+    """Sanity check — vérifie que le serveur tourne."""
     return {"status": "ok", "message": "Prompt Engineer API v2.0 🚀"}
 
 
 @app.get("/health")
-def health():
-    """Vérifie l'état du serveur et du graph."""
+@limiter.limit("30/minute")
+def health(request: Request):
+    """Vérifie l'état du serveur."""
     return {
         "status": "healthy",
         "graph_ready": graph is not None,
         "database": "postgresql",
     }
 
+# ── Routes protégées ──────────────────────────────────────────────────────────
 
 @app.post("/generate-prompt", response_model=PromptResponse)
+@limiter.limit("10/minute")
+# 🔒 Maximum 10 générations par minute par IP
+# Protège contre le scraping et les abus de l'API Groq
 async def generate_prompt(
-    request: PromptRequest,
-    current_user: User = Depends(get_current_user),
-    # 🔒 Route protégée : FastAPI vérifie automatiquement le JWT
-    # Si le token est absent/invalide → 401 Unauthorized automatique
-    db: Session = Depends(get_db),
-    # Session PostgreSQL injectée automatiquement
+    request: Request,                              # nécessaire pour slowapi
+    body: PromptRequest,                           # données reçues
+    current_user: User = Depends(get_current_user),# 🔒 JWT requis
+    db: Session = Depends(get_db),                 # session PostgreSQL
 ):
     """
     Génère un prompt structuré en 3 étapes via LangGraph.
-    Route protégée par JWT.
+    🔒 Route protégée : JWT + Rate limit 10/minute par IP.
 
     Étapes :
-    1. Vérifie le token JWT (via Depends(get_current_user))
-    2. Lance le pipeline agent (analyze → structure → refine)
-    3. Sauvegarde le prompt généré dans PostgreSQL (prompt_history)
-    4. Retourne les résultats au frontend
+    1. Vérifie le JWT
+    2. Lance le pipeline agent
+    3. Sauvegarde dans PostgreSQL
+    4. Retourne les résultats
     """
 
-    # Validation de l'input
-    if not request.user_input.strip():
+    if not body.user_input.strip():
         raise HTTPException(
             status_code=422,
             detail="Le champ user_input ne peut pas être vide."
@@ -168,23 +168,16 @@ async def generate_prompt(
             detail="Agent non initialisé. Réessayez dans quelques secondes."
         )
 
-    # État initial du graph LangGraph
-    # Chaque clé correspond à un champ de AgentState dans state.py
+    # État initial du pipeline LangGraph
     initial_state = {
-        "user_input": request.user_input.strip(),
-        "intent": "",
-        "domain": "",
-        "complexity": "",
-        "role": "",
-        "context": "",
-        "task": "",
-        "output_format": "",
-        "constraints": "",
-        "full_prompt": "",
-        "error": "",
+        "user_input": body.user_input.strip(),
+        "intent": "", "domain": "", "complexity": "",
+        "role": "", "context": "", "task": "",
+        "output_format": "", "constraints": "",
+        "full_prompt": "", "error": "",
     }
 
-    # Lance le pipeline agent (3 nodes : analyze → structure → refine)
+    # Lance le pipeline agent (3 nodes)
     try:
         final_state = graph.invoke(initial_state)
     except Exception as e:
@@ -193,18 +186,16 @@ async def generate_prompt(
             detail=f"Erreur interne de l'agent : {str(e)}"
         )
 
-    # Si un node a capturé une erreur métier
     if final_state.get("error"):
         raise HTTPException(
             status_code=500,
             detail=final_state["error"]
         )
 
-    # ── Sauvegarde dans PostgreSQL ────────────────────────────────────────────
-    # On sauvegarde chaque prompt généré dans l'historique de l'utilisateur
+    # Sauvegarde dans PostgreSQL
     prompt_record = PromptHistory(
-        user_id=current_user.id,                        # lié au user connecté
-        user_input=request.user_input.strip(),
+        user_id=current_user.id,
+        user_input=body.user_input.strip(),
         intent=final_state.get("intent", ""),
         domain=final_state.get("domain", ""),
         complexity=final_state.get("complexity", ""),
@@ -215,13 +206,11 @@ async def generate_prompt(
         constraints=final_state.get("constraints", ""),
         full_prompt=final_state.get("full_prompt", ""),
     )
-
-    db.add(prompt_record)   # prépare l'insertion
-    db.commit()             # sauvegarde définitivement dans PostgreSQL
+    db.add(prompt_record)
+    db.commit()
     db.refresh(prompt_record)
     print(f"💾 Prompt #{prompt_record.id} sauvegardé pour {current_user.email}")
 
-    # Retourne les résultats au frontend
     return PromptResponse(
         intent=final_state.get("intent", ""),
         domain=final_state.get("domain", ""),
@@ -236,24 +225,22 @@ async def generate_prompt(
 
 
 @app.get("/my-prompts")
+@limiter.limit("20/minute")
+# Maximum 20 consultations d'historique par minute par IP
 async def my_prompts(
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
-    Retourne l'historique des prompts générés par l'utilisateur connecté.
-    Route protégée par JWT.
-
-    Retourne les 20 derniers prompts, du plus récent au plus ancien.
+    Retourne les 20 derniers prompts de l'utilisateur connecté.
+    🔒 Route protégée : JWT requis.
     """
     prompts = (
         db.query(PromptHistory)
         .filter(PromptHistory.user_id == current_user.id)
-        # Filtre : uniquement les prompts de l'utilisateur connecté
         .order_by(PromptHistory.created_at.desc())
-        # Tri : du plus récent au plus ancien
         .limit(20)
-        # Limite : 20 prompts maximum
         .all()
     )
 
