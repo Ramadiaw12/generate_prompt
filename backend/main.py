@@ -11,7 +11,7 @@
 # ── Chargement du .env EN PREMIER ─────────────────────────────────────────────
 from dotenv import load_dotenv
 load_dotenv("../.env")
-# ⚠️ Doit être avant tout import LangChain/SQLAlchemy
+#  Doit être avant tout import LangChain/SQLAlchemy
 
 # ── Imports ───────────────────────────────────────────────────────────────────
 
