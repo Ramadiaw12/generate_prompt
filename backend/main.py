@@ -80,11 +80,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "https://prompt-craft26.netlify.app/",
-        "https://promptcraft.today",
-        ],
+    allow_origins=["http://localhost:3000", "https://prompt-craft26.netlify.app/", "https://promptcraft.today"],
 
     # ✅ SÉCURISÉ : on accepte UNIQUEMENT le frontend local
     # En production : remplacez par votre vrai domaine
