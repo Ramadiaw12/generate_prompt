@@ -50,7 +50,7 @@ services:
       # postgres_data = nom du volume (défini en bas du fichier)
 
     ports:
-      - "5432:5432"
+      - "5433:5432"
       # Expose le port PostgreSQL sur votre machine locale
       # Format : "port_local:port_conteneur"
       # Utile pour se connecter avec un client DB (DBeaver, pgAdmin)
