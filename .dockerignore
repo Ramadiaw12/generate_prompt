@@ -1,0 +1,30 @@
+# =============================================================================
+# Fichier : .dockerignore
+# Rôle    : Fichiers exclus du contexte de build Docker
+#           (équivalent du .gitignore mais pour Docker)
+# Auteur  : DIAWANE Ramatoulaye
+# =============================================================================
+
+# Environnements virtuels — les dépendances sont réinstallées dans le conteneur
+.venv
+__pycache__
+*.pyc
+*.pyo
+
+# Variables d'environnement — ne JAMAIS inclure dans l'image Docker
+.env
+
+# Fichiers Git
+.git
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Fichiers de développement
+.pytest_cache
+*.egg-info
+
+# Logs
+*.log

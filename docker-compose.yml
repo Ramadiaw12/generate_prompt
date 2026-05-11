@@ -1,0 +1,161 @@
+# =============================================================================
+# Fichier : docker-compose.yml
+# Rôle    : Orchestre tous les services de l'application
+#           - backend  : API FastAPI
+#           - db       : PostgreSQL
+#           - frontend : Nginx (sert le HTML statique)
+# Auteur  : DIAWANE Ramatoulaye
+#
+# Docker Compose = chef d'orchestre qui lance plusieurs conteneurs ensemble
+# et les fait communiquer entre eux
+# =============================================================================
+
+version: "3.9"
+# Version du format docker-compose
+# 3.9 = version stable et compatible avec Docker Engine 19+
+
+services:
+# "services" = liste de tous les conteneurs à lancer
+
+  # ── SERVICE 1 : Base de données PostgreSQL ──────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    # On utilise l'image officielle PostgreSQL 16
+    # alpine = version ultra-légère basée sur Alpine Linux (~50MB vs ~400MB)
+
+    container_name: promptcraft_db
+    # Nom du conteneur — pour l'identifier facilement avec "docker ps"
+
+    restart: unless-stopped
+    # Redémarre automatiquement si le conteneur crashe
+    # unless-stopped = redémarre toujours sauf si on l'arrête manuellement
+
+    environment:
+      # Variables d'environnement passées à PostgreSQL au démarrage
+      POSTGRES_DB: ${POSTGRES_DB:-promptcraft}
+      # Nom de la base de données
+      # ${VAR:-default} = valeur du .env ou "promptcraft" par défaut
+
+      POSTGRES_USER: ${POSTGRES_USER:-promptuser}
+      # Utilisateur PostgreSQL
+
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      # Mot de passe PostgreSQL — obligatoire, pas de valeur par défaut
+      # Doit être défini dans .env
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Volume persistant : les données PostgreSQL survivent aux redémarrages
+      # Sans ce volume, toutes les données sont perdues à chaque "docker-compose down"
+      # postgres_data = nom du volume (défini en bas du fichier)
+
+    ports:
+      - "5432:5432"
+      # Expose le port PostgreSQL sur votre machine locale
+      # Format : "port_local:port_conteneur"
+      # Utile pour se connecter avec un client DB (DBeaver, pgAdmin)
+      # En production : supprimez cette ligne (ne pas exposer la DB publiquement)
+
+    healthcheck:
+      # Vérifie que PostgreSQL est prêt à accepter des connexions
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-promptuser} -d ${POSTGRES_DB:-promptcraft}"]
+      interval: 10s    # vérifie toutes les 10 secondes
+      timeout: 5s      # attend max 5 secondes
+      retries: 5       # 5 échecs → service "unhealthy"
+      start_period: 10s # attend 10s avant le premier check
+
+    networks:
+      - promptcraft_network
+      # Réseau interne Docker — seuls les services sur ce réseau
+      # peuvent communiquer entre eux
+
+  # ── SERVICE 2 : Backend FastAPI ─────────────────────────────────────────────
+  backend:
+    build:
+      context: .
+      # Contexte de build = dossier racine du projet
+      # Docker cherche le Dockerfile ici
+      dockerfile: Dockerfile
+      # Nom du Dockerfile à utiliser
+
+    container_name: promptcraft_backend
+
+    restart: unless-stopped
+
+    environment:
+      # Variables d'environnement pour FastAPI
+      DATABASE_URL: postgresql://${POSTGRES_USER:-promptuser}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-promptcraft}
+      # "db" = nom du service PostgreSQL ci-dessus
+      # Docker Compose résout automatiquement "db" vers l'IP du conteneur PostgreSQL
+      # C'est la magie du réseau Docker interne !
+
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      # Clé API Groq — lue depuis .env
+
+      SECRET_KEY: ${SECRET_KEY}
+      # Clé secrète JWT — lue depuis .env
+
+    ports:
+      - "8000:8000"
+      # Expose l'API sur le port 8000 de votre machine
+
+    depends_on:
+      db:
+        condition: service_healthy
+        # Le backend démarre UNIQUEMENT quand PostgreSQL est "healthy"
+        # Évite les erreurs "connexion refusée" au démarrage
+
+    volumes:
+      - ./backend:/app
+      # Monte le dossier backend/ local dans /app du conteneur
+      # Permet le hot-reload en développement : modifiez le code → l'API se recharge
+
+    networks:
+      - promptcraft_network
+
+  # ── SERVICE 3 : Frontend Nginx ──────────────────────────────────────────────
+  frontend:
+    image: nginx:alpine
+    # Nginx = serveur web ultra-performant pour servir les fichiers statiques
+    # Beaucoup plus robuste que "python -m http.server" pour la production
+
+    container_name: promptcraft_frontend
+
+    restart: unless-stopped
+
+    ports:
+      - "3000:80"
+      # Nginx écoute sur le port 80 dans le conteneur
+      # On le mappe sur le port 3000 de votre machine
+      # → http://localhost:3000
+
+    volumes:
+      - ./front:/usr/share/nginx/html:ro
+      # Monte le dossier front/ dans le dossier de fichiers statiques de Nginx
+      # :ro = read-only (Nginx n'a pas besoin d'écrire)
+
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      # Configuration Nginx personnalisée (créée juste après)
+
+    depends_on:
+      - backend
+      # Le frontend démarre après le backend
+
+    networks:
+      - promptcraft_network
+
+# ── Volumes persistants ───────────────────────────────────────────────────────
+volumes:
+  postgres_data:
+    # Volume nommé pour les données PostgreSQL
+    # Géré par Docker — stocké dans /var/lib/docker/volumes/
+    # Survit aux "docker-compose down" et "docker-compose up"
+    # Supprimé uniquement avec "docker-compose down -v"
+
+# ── Réseau interne ────────────────────────────────────────────────────────────
+networks:
+  promptcraft_network:
+    driver: bridge
+    # Réseau bridge = réseau virtuel isolé
+    # Les conteneurs communiquent par leur nom de service (db, backend, frontend)
+    # Isolé du réseau de votre machine → sécurité
