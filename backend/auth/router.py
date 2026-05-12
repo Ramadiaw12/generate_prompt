@@ -262,7 +262,7 @@ async def google_login(request: Request):
     7. On crée/connecte le compte dans PostgreSQL
     8. On génère notre JWT et on redirige vers le frontend
     """
-    redirect_uri = request.url_for("google_callback")
+    redirect_uri = "https://promptcraft.today/auth/google/callback"
     # request.url_for génère automatiquement l'URL de callback
     # Ex: https://promptcraft.today/auth/google/callback
 
