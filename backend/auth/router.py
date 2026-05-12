@@ -40,7 +40,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 jours
 
 # ── Configuration Google OAuth ────────────────────────────────────────────────
 
-GOOGLE_CLIENT_ID     = os.getenv("1073529311745-7h1r8cp2pgqv39peescb3udcp05a6vqk.apps.googleusercontent.com")
+GOOGLE_CLIENT_ID     = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 FRONTEND_URL         = os.getenv("FRONTEND_URL", "http://localhost:3000")
 # FRONTEND_URL : après le login Google, on redirige l'user vers le frontend
