@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://readme-typing-svg.demolab.com?font=DM+Serif+Display&size=32&duration=3000&pause=1000&color=E8740C&center=true&vCenter=true&width=700&lines=PromptCraft+—+AI+Prompt+Engineer;Transform+ideas+into+perfect+prompts;Build+better+prompts%2C+faster." alt="Typing SVG" />
+<img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=28&duration=3000&pause=1000&color=E8740C&center=true&vCenter=true&width=700&lines=PromptCraft+%E2%80%94+AI+Prompt+Engineer;Transform+ideas+into+perfect+prompts;Build+better+prompts%2C+faster." alt="Typing SVG" />
 
 <br/>
 
@@ -570,7 +570,7 @@ Made with 🧠 ☕ and a lot of debugging by
 **DIAWANE Ramatoulaye**
 
 [![GitHub](https://img.shields.io/badge/GitHub-Ramadiaw12-181717?style=for-the-badge&logo=github)](https://github.com/Ramadiaw12)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0077B5?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/ramatoulaye-diawane/)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0077B5?style=for-the-badge&logo=linkedin)](https://linkedin.com/in/votre-profil)
 [![Twitter](https://img.shields.io/badge/Twitter-Follow-1DA1F2?style=for-the-badge&logo=twitter)](https://twitter.com/votre-compte)
 
 <br/>
