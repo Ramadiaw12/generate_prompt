@@ -1,9 +1,10 @@
 # =============================================================================
 # Fichier : backend/auth/router.py
-# Rôle    : Authentification JWT branchée sur PostgreSQL
-#           - Inscription (register)
-#           - Connexion   (login)
-#           - Profil      (me)
+# Rôle    : Authentification JWT + Google OAuth
+#           - Inscription classique (register)
+#           - Connexion classique   (login)
+#           - Connexion Google      (google/login + google/callback)
+#           - Profil                (me)
 # Auteur  : DIAWANE Ramatoulaye
 # =============================================================================
 
@@ -14,12 +15,19 @@ from typing import Optional
 from dotenv import load_dotenv
 load_dotenv("../.env")
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+
+from authlib.integrations.starlette_client import OAuth
+# OAuth : bibliothèque qui gère le protocole OAuth2 avec Google
+# Elle s'occupe de tout : redirection, échange de token, récupération du profil
+
 from jose import JWTError, jwt
 from passlib.context import CryptContext
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from starlette.config import Config
 
 from db.database import get_db
 from models.schemas import User
@@ -27,105 +35,139 @@ from models.schemas import User
 # ── Configuration JWT ─────────────────────────────────────────────────────────
 
 SECRET_KEY = os.getenv("SECRET_KEY", "changez-moi-en-production")
-# Clé secrète pour signer les tokens JWT
-# En production : générez avec → openssl rand -hex 32
-
 ALGORITHM = "HS256"
-# Algorithme de signature : HMAC avec SHA-256
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 jours
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7
-# Durée de validité du token : 7 jours
+# ── Configuration Google OAuth ────────────────────────────────────────────────
+
+GOOGLE_CLIENT_ID     = os.getenv("1073529311745-7h1r8cp2pgqv39peescb3udcp05a6vqk.apps.googleusercontent.com")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+FRONTEND_URL         = os.getenv("FRONTEND_URL", "http://localhost:3000")
+# FRONTEND_URL : après le login Google, on redirige l'user vers le frontend
+
+# Configuration Authlib pour Google
+config = Config(environ={
+    "GOOGLE_CLIENT_ID":     GOOGLE_CLIENT_ID,
+    "GOOGLE_CLIENT_SECRET": GOOGLE_CLIENT_SECRET,
+})
+
+oauth = OAuth(config)
+oauth.register(
+    name="google",
+    # URLs officielles de Google pour OAuth2
+    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+    client_kwargs={
+        "scope": "openid email profile",
+        # openid  : authentification
+        # email   : récupérer l'email de l'user
+        # profile : récupérer le nom et la photo
+    },
+)
 
 # ── Initialisation ────────────────────────────────────────────────────────────
 
-router = APIRouter(
-    prefix="/auth",   # toutes les routes commencent par /auth
-    tags=["auth"],    # groupe dans la doc Swagger
-)
+router = APIRouter(prefix="/auth", tags=["auth"])
 
-pwd_context = CryptContext(
-    schemes=["argon2"],   # algorithme de hashage des mots de passe
-    deprecated="auto",
-)
-# Argon2 = standard recommandé pour hasher les mots de passe
+pwd_context = CryptContext(schemes=["argon2"], deprecated="auto")
+# Argon2 = algorithme de hashage recommandé pour les mots de passe
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
-# Lit automatiquement le header : Authorization: Bearer <token>
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
+# auto_error=False : ne pas lever d'erreur si pas de token
+# (certaines routes acceptent les deux : token JWT ou Google)
 
 # ── Schémas Pydantic ──────────────────────────────────────────────────────────
 
 class UserRegister(BaseModel):
-    """Données reçues lors de l'inscription."""
+    """Données reçues lors de l'inscription classique."""
     email: str
     password: str
     name: Optional[str] = ""
 
 class Token(BaseModel):
-    """Réponse renvoyée après une connexion réussie."""
+    """Token JWT renvoyé après connexion."""
     access_token: str
     token_type: str
 
 class UserOut(BaseModel):
-    """Données utilisateur renvoyées par /auth/me (sans le mot de passe !)"""
+    """Données utilisateur publiques (sans mot de passe)."""
     id: int
     email: str
     name: Optional[str]
     created_at: datetime
+    auth_provider: Optional[str]  # "local" ou "google"
 
     class Config:
         from_attributes = True
-        # Permet à Pydantic de lire les attributs SQLAlchemy directement
 
 # ── Fonctions utilitaires ─────────────────────────────────────────────────────
 
 def hash_password(password: str) -> str:
-    """
-    Transforme un mot de passe en clair en hash Argon2.
-    On ne stocke JAMAIS le mot de passe en clair dans la DB.
-    "monpassword" → "$argon2id$v=19$m=65536..."
-    Ce processus est irréversible.
-    """
+    """Hash un mot de passe avec Argon2. Irréversible."""
     return pwd_context.hash(password)
 
 def verify_password(plain: str, hashed: str) -> bool:
-    """
-    Vérifie qu'un mot de passe en clair correspond à son hash.
-    Utilisé lors du login.
-    """
+    """Vérifie qu'un mot de passe correspond à son hash."""
     return pwd_context.verify(plain, hashed)
 
 def create_access_token(data: dict) -> str:
     """
-    Crée un token JWT signé contenant l'email de l'utilisateur.
-    Le token expire dans 7 jours.
-    Signé avec SECRET_KEY → impossible à falsifier sans la clé.
+    Crée un token JWT signé valide 7 jours.
+    Contient l'email de l'user dans le champ 'sub'.
     """
     to_encode = data.copy()
     expire = datetime.now(timezone.utc) + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
-# ── Dépendance : récupérer le user connecté ───────────────────────────────────
+def get_or_create_google_user(db: Session, email: str, name: str, picture: str) -> User:
+    """
+    Récupère un user existant par email ou en crée un nouveau.
+    Utilisé après l'authentification Google.
+
+    Si l'user existe déjà (inscription classique) → on le connecte
+    Si l'user n'existe pas → on crée un compte automatiquement
+    Pas de mot de passe pour les users Google (auth_provider = "google")
+    """
+    user = db.query(User).filter(User.email == email).first()
+
+    if user:
+        # L'user existe → on met à jour son provider si nécessaire
+        if user.auth_provider != "google":
+            user.auth_provider = "google"
+            db.commit()
+        return user
+
+    # Crée un nouveau user Google (sans mot de passe)
+    new_user = User(
+        email=email,
+        name=name or email.split("@")[0],
+        hashed_password="",          # pas de mot de passe pour Google
+        auth_provider="google",      # indique que c'est un compte Google
+        picture=picture or "",       # photo de profil Google
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+    return new_user
+
+# ── Dépendance : user connecté ────────────────────────────────────────────────
 
 async def get_current_user(
-    token: str = Depends(oauth2_scheme),  # lit le token dans le header
-    db: Session = Depends(get_db),        # ouvre une session PostgreSQL
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db),
 ) -> User:
     """
-    Dépendance FastAPI : décode le JWT et retourne l'objet User depuis PostgreSQL.
-
-    Étapes :
-    1. Lit le token depuis Authorization: Bearer <token>
-    2. Décode et vérifie la signature avec SECRET_KEY
-    3. Extrait l'email depuis le token
-    4. Charge l'objet User depuis PostgreSQL
-    5. Retourne le User si tout est OK, lève une 401 sinon
+    Dépendance FastAPI : vérifie le JWT et retourne l'user depuis PostgreSQL.
+    Utilisée dans toutes les routes protégées avec Depends(get_current_user).
     """
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Token invalide ou expiré. Veuillez vous reconnecter.",
         headers={"WWW-Authenticate": "Bearer"},
     )
+
+    if not token:
+        raise credentials_exception
 
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -135,113 +177,131 @@ async def get_current_user(
     except JWTError:
         raise credentials_exception
 
-    # Cherche le user dans PostgreSQL
     user = db.query(User).filter(User.email == email).first()
     if user is None:
         raise credentials_exception
 
     return user
 
-# ── Routes ────────────────────────────────────────────────────────────────────
+# ── ROUTES CLASSIQUES ─────────────────────────────────────────────────────────
 
 @router.post("/register", status_code=201)
-async def register(
-    body: UserRegister,
-    db: Session = Depends(get_db)
-):
+async def register(body: UserRegister, db: Session = Depends(get_db)):
     """
-    Crée un nouveau compte utilisateur dans PostgreSQL.
-
-    Étapes :
-    1. Vérifie que l'email n'est pas déjà utilisé
-    2. Vérifie que le mot de passe fait au moins 6 caractères
-    3. Hashe le mot de passe avec Argon2
-    4. Insère le nouvel utilisateur dans PostgreSQL
-    5. Retourne un message de confirmation
+    Crée un compte avec email + mot de passe.
+    Le mot de passe est hashé avec Argon2 avant stockage.
     """
+    existing = db.query(User).filter(User.email == body.email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Cet email est déjà utilisé.")
 
-    # Vérifie si l'email existe déjà
-    existing_user = db.query(User).filter(User.email == body.email).first()
-    if existing_user:
-        raise HTTPException(
-            status_code=400,
-            detail="Cet email est déjà utilisé. Essayez de vous connecter."
-        )
-
-    # Validation du mot de passe
     if len(body.password) < 6:
-        raise HTTPException(
-            status_code=422,
-            detail="Le mot de passe doit contenir au moins 6 caractères."
-        )
+        raise HTTPException(status_code=422, detail="Le mot de passe doit faire au moins 6 caractères.")
 
-    # Hashage du mot de passe (on ne stocke JAMAIS le mot de passe en clair)
-    hashed = hash_password(body.password)
-
-    # Création de l'objet User SQLAlchemy
     new_user = User(
         email=body.email,
-        hashed_password=hashed,
+        hashed_password=hash_password(body.password),
         name=body.name or "",
+        auth_provider="local",   # compte classique
+        picture="",
     )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
 
-    # Sauvegarde dans PostgreSQL
-    db.add(new_user)       # prépare l'insertion
-    db.commit()            # valide la transaction
-    db.refresh(new_user)   # recharge depuis DB (récupère l'id auto-généré)
-
-    return {
-        "message": "Compte créé avec succès. Bienvenue !",
-        "email": new_user.email,
-        "id": new_user.id,
-    }
+    return {"message": "Compte créé avec succès !", "email": new_user.email, "id": new_user.id}
 
 
 @router.post("/login", response_model=Token)
-async def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
-):
+async def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     """
-    Authentifie un utilisateur et retourne un token JWT.
-
-    Étapes :
-    1. Cherche l'utilisateur par email dans PostgreSQL
-    2. Vérifie le mot de passe avec Argon2
-    3. Génère un token JWT signé valide 7 jours
-    4. Retourne le token
-
-    Note : OAuth2 utilise "username" pour l'email (standard OAuth2)
+    Connexion classique email + mot de passe.
+    Retourne un JWT valide 7 jours.
     """
-
-    # Cherche le user par email
     user = db.query(User).filter(User.email == form_data.username).first()
 
-    # Vérifie email ET mot de passe ensemble
-    # (ne pas révéler si l'email existe ou non → sécurité)
-    if not user or not verify_password(form_data.password, user.hashed_password):
+    if not user or not user.hashed_password:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email ou mot de passe incorrect.",
-            headers={"WWW-Authenticate": "Bearer"},
         )
 
-    # Génère le token JWT
-    token = create_access_token(data={"sub": user.email})
+    if not verify_password(form_data.password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Email ou mot de passe incorrect.",
+        )
 
-    return {
-        "access_token": token,
-        "token_type": "bearer",
-    }
+    token = create_access_token(data={"sub": user.email})
+    return {"access_token": token, "token_type": "bearer"}
 
 
 @router.get("/me", response_model=UserOut)
-async def me(
-    current_user: User = Depends(get_current_user)
-):
+async def me(current_user: User = Depends(get_current_user)):
     """
-    Retourne les informations du compte connecté.
-    Route protégée : nécessite un token JWT valide.
-    Le mot de passe haché n'est jamais renvoyé (UserOut l'exclut).
+    Retourne les infos du user connecté.
+    Route protégée : JWT requis.
     """
     return current_user
+
+# ── ROUTES GOOGLE OAUTH ───────────────────────────────────────────────────────
+
+@router.get("/google/login")
+async def google_login(request: Request):
+    """
+    Étape 1 du flow Google OAuth.
+    Redirige l'user vers la page de connexion Google.
+
+    Flow complet :
+    1. User clique "Continuer avec Google" → appelle cette route
+    2. Cette route redirige vers accounts.google.com
+    3. L'user choisit son compte Google
+    4. Google redirige vers /auth/google/callback avec un code
+    5. On échange le code contre un token Google
+    6. On récupère l'email + nom de l'user
+    7. On crée/connecte le compte dans PostgreSQL
+    8. On génère notre JWT et on redirige vers le frontend
+    """
+    redirect_uri = request.url_for("google_callback")
+    # request.url_for génère automatiquement l'URL de callback
+    # Ex: https://promptcraft.today/auth/google/callback
+
+    return await oauth.google.authorize_redirect(request, redirect_uri)
+
+
+@router.get("/google/callback", name="google_callback")
+async def google_callback(request: Request, db: Session = Depends(get_db)):
+    """
+    Étape 2 du flow Google OAuth — callback.
+    Google appelle cette route avec un code d'autorisation.
+
+    On échange ce code contre les infos de l'user.
+    """
+    try:
+        # Échange le code Google contre un token d'accès
+        token = await oauth.google.authorize_access_token(request)
+    except Exception:
+        raise HTTPException(status_code=400, detail="Erreur lors de l'authentification Google.")
+
+    # Récupère les infos du user depuis Google
+    user_info = token.get("userinfo")
+    if not user_info:
+        raise HTTPException(status_code=400, detail="Impossible de récupérer les informations Google.")
+
+    email   = user_info.get("email")
+    name    = user_info.get("name", "")
+    picture = user_info.get("picture", "")
+
+    if not email:
+        raise HTTPException(status_code=400, detail="Email Google non disponible.")
+
+    # Crée ou récupère le user dans PostgreSQL
+    user = get_or_create_google_user(db, email, name, picture)
+
+    # Génère notre JWT
+    jwt_token = create_access_token(data={"sub": user.email})
+
+    # Redirige vers le frontend avec le token dans l'URL
+    # Le frontend va lire ce token et le stocker dans localStorage
+    frontend_url = f"{FRONTEND_URL}?token={jwt_token}&email={email}&name={name}"
+    return RedirectResponse(url=frontend_url)
