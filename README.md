@@ -90,39 +90,65 @@ PromptCraft structures your request into a professional prompt :
 
 ## 🏗️ Architecture
 
-```
-┌──────────────────────────────────────────────────────────────┐
-│                    FRONTEND — Netlify CDN                    │
-│         Vanilla JS · HTML · CSS  ·  No framework             │
-│   Auth modal · Interactive SVG · Results display             │
-│              prompt-craft26.netlify.app                      │
-└────────────────────────────┬─────────────────────────────────┘
-                             │  HTTPS + Bearer JWT
-                             │
-┌────────────────────────────▼─────────────────────────────────┐
-│               FASTAPI BACKEND — Railway                       │
-│                   promptcraft.today                          │
-│                                                              │
-│   🔓 POST /auth/register    🔓 POST /auth/login              │
-│   🔒 POST /generate-prompt  🔒 GET  /my-prompts              │
-│                                                              │
-│  ┌────────────────────────────────────────────────────────┐  │
-│  │                  LangGraph Agent                       │  │
-│  │                                                        │  │
-│  │  analyze_input → structure_prompt → refine_output      │  │
-│  │       ↓                 ↓                ↓             │  │
-│  │  intent/domain     5 sections       full_prompt        │  │
-│  │                                                        │  │
-│  │           LLaMA 3.3 70B via Groq API                  │  │
-│  └────────────────────────────────────────────────────────┘  │
-│                          │                                   │
-└──────────────────────────┼───────────────────────────────────┘
-                           │
-┌──────────────────────────▼───────────────────────────────────┐
-│              PostgreSQL 16 — Railway                         │
-│         users table · prompt_history table                   │
-│              Persistent · Secure · Scalable                  │
-└──────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    User(["👤 User\nBrowser"])
+
+    subgraph Netlify ["🌐 Netlify CDN — Frontend"]
+        FE["📄 index.html\nVanilla JS · HTML · CSS\nAuth modal · SVG diagram · Results"]
+    end
+
+    subgraph Railway ["🚀 Railway — Backend"]
+        API["⚡ FastAPI\nprompcraft.today"]
+
+        subgraph Agent ["🤖 LangGraph Agent Pipeline"]
+            N1["🔍 analyze_input\nintent · domain · complexity"]
+            N2["🏗️ structure_prompt\nrole · context · task · format · constraints"]
+            N3["✨ refine_output\nfull_prompt"]
+            N1 --> N2 --> N3
+        end
+
+        subgraph Auth ["🔐 Authentication"]
+            REG["POST /auth/register"]
+            LOG["POST /auth/login"]
+            ME["GET /auth/me"]
+        end
+
+        API --> Agent
+        API --> Auth
+    end
+
+    subgraph DB ["🗄️ Railway — PostgreSQL 16"]
+        T1[("👥 users\nid · email · password · name")]
+        T2[("📝 prompt_history\nuser_id · input · sections · full_prompt")]
+    end
+
+    subgraph Security ["🛡️ Security Layer"]
+        JWT["🔑 JWT HS256\n7 days validity"]
+        ARGON["🔒 Argon2\nPassword hashing"]
+        RATE["⏱️ Rate Limiting\n10 req/min"]
+    end
+
+    User -->|"HTTPS + Bearer JWT"| FE
+    FE -->|"POST /generate-prompt"| API
+    N3 -->|"💾 Save result"| T2
+    Auth -->|"🔍 Query user"| T1
+    API --- Security
+
+    style Netlify fill:#1a1a2e,stroke:#e8740c,color:#fff
+    style Railway fill:#1a1a2e,stroke:#1a5fb4,color:#fff
+    style DB fill:#1a1a2e,stroke:#276f4c,color:#fff
+    style Security fill:#1a1a2e,stroke:#b5193b,color:#fff
+    style Agent fill:#0d0d1a,stroke:#e8740c,color:#fff
+    style Auth fill:#0d0d1a,stroke:#1a5fb4,color:#fff
+    style N1 fill:#e8740c,stroke:#e8740c,color:#fff
+    style N2 fill:#1a5fb4,stroke:#1a5fb4,color:#fff
+    style N3 fill:#276f4c,stroke:#276f4c,color:#fff
+    style JWT fill:#b5193b,stroke:#b5193b,color:#fff
+    style ARGON fill:#b5193b,stroke:#b5193b,color:#fff
+    style RATE fill:#b5193b,stroke:#b5193b,color:#fff
+    style T1 fill:#276f4c,stroke:#276f4c,color:#fff
+    style T2 fill:#276f4c,stroke:#276f4c,color:#fff
 ```
 
 ---
