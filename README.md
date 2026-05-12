@@ -570,7 +570,7 @@ Made with 🧠 ☕ and a lot of debugging by
 **DIAWANE Ramatoulaye**
 
 [![GitHub](https://img.shields.io/badge/GitHub-Ramadiaw12-181717?style=for-the-badge&logo=github)](https://github.com/Ramadiaw12)
-[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0077B5?style=for-the-badge&logo=linkedin)](https://linkedin.com/in/votre-profil)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0077B5?style=for-the-badge&logo=linkedin)](https://www.linkedin.com/in/ramatoulaye-diawane/)
 [![Twitter](https://img.shields.io/badge/Twitter-Follow-1DA1F2?style=for-the-badge&logo=twitter)](https://twitter.com/votre-compte)
 
 <br/>
