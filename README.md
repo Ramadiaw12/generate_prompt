@@ -1,24 +1,31 @@
 <div align="center">
 
-<img src="https://readme-typing-svg.demolab.com?font=DM+Serif+Display&size=32&duration=3000&pause=1000&color=E8740C&center=true&vCenter=true&width=600&lines=AI+Prompt+Engineering+Assistant;Build+better+prompts%2C+faster." alt="Typing SVG" />
+<img src="https://readme-typing-svg.demolab.com?font=DM+Serif+Display&size=32&duration=3000&pause=1000&color=E8740C&center=true&vCenter=true&width=700&lines=PromptCraft+—+AI+Prompt+Engineer;Transform+ideas+into+perfect+prompts;Build+better+prompts%2C+faster." alt="Typing SVG" />
 
 <br/>
 
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![LangGraph](https://img.shields.io/badge/LangGraph-Agent-1a5fb4?style=for-the-badge&logo=chainlink&logoColor=white)](https://langchain-ai.github.io/langgraph/)
-[![OpenAI](https://img.shields.io/badge/GPT--4o--mini-powered-412991?style=for-the-badge&logo=openai&logoColor=white)](https://openai.com)
+[![Groq](https://img.shields.io/badge/Groq-LLaMA3-f55036?style=for-the-badge&logo=groq&logoColor=white)](https://groq.com)
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![uv](https://img.shields.io/badge/uv-package%20manager-DE5FE9?style=for-the-badge&logo=astral&logoColor=white)](https://docs.astral.sh/uv)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://postgresql.org)
+[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
 [![License](https://img.shields.io/badge/License-MIT-276f4c?style=for-the-badge)](LICENSE)
 
 <br/>
 
-> **An agentic platform that transforms raw ideas into structured, production-ready prompts**  
-> using a 3-node LangGraph pipeline — analyze → structure → refine.
+> **PromptCraft transforms your raw ideas into structured, production-ready prompts**
+> using a 3-node LangGraph agent pipeline — analyze → structure → refine.
+>
+> 🎯 Stop wasting time rewriting prompts. Get perfect results on the first try.
 
 <br/>
 
-**Author:** DIAWANE Ramatoulaye &nbsp;·&nbsp; [Report Bug](../../issues) &nbsp;·&nbsp; [Request Feature](../../issues) &nbsp;·&nbsp; [API Docs](http://localhost:8000/docs)
+**🌍 Live Demo:** [promptcraft.today](https://promptcraft.today) &nbsp;·&nbsp;
+**Author:** DIAWANE Ramatoulaye &nbsp;·&nbsp;
+[Report Bug](../../issues) &nbsp;·&nbsp;
+[Request Feature](../../issues) &nbsp;·&nbsp;
+[API Docs](https://promptcraft.today/docs)
 
 </div>
 
@@ -26,61 +33,96 @@
 
 ## 📑 Table of Contents
 
-- [✨ Overview](#-overview)
+- [✨ Why PromptCraft ?](#-why-promptcraft-)
+- [🎬 Demo](#-demo)
 - [🏗️ Architecture](#-architecture)
 - [📁 Project Structure](#-project-structure)
 - [⚙️ Prerequisites](#-prerequisites)
 - [🚀 Getting Started](#-getting-started)
+- [🐳 Docker](#-docker)
 - [🔐 Environment Variables](#-environment-variables)
 - [📡 API Reference](#-api-reference)
 - [🤖 Agent Pipeline](#-agent-pipeline)
-- [🔑 Authentication](#-authentication)
+- [🔑 Authentication & Security](#-authentication--security)
 - [🖥️ Frontend](#-frontend)
 - [🤝 Contributing](#-contributing)
 - [🗺️ Roadmap](#-roadmap)
 
 ---
 
-## ✨ Overview
+## ✨ Why PromptCraft ?
 
-This platform takes a **free-text user request** and runs it through a 3-node LangGraph agent that:
+Most people use AI like this :
 
-| Step | Node | Output |
-|------|------|--------|
-| 1️⃣ | `analyze_input` | intent · domain · complexity |
-| 2️⃣ | `structure_prompt` | role · context · task · output_format · constraints |
-| 3️⃣ | `refine_output` | a single fluent, production-ready prompt |
+```
+❌ "Write me an email"       →  mediocre result
+❌ "Help me with my code"    →  vague answer
+❌ "Summarize this"          →  generic output
+```
 
-Users authenticate via **JWT** before accessing the generation pipeline. The interactive frontend also serves as a visual reference on prompt engineering concepts (clickable SVG diagram).
+PromptCraft structures your request into a professional prompt :
+
+```
+✅ Role        →  who the AI should be
+✅ Context     →  background information
+✅ Task        →  precise step-by-step instructions
+✅ Format      →  expected output structure
+✅ Constraints →  what to avoid
+```
+
+**Result : production-ready prompts in 3 seconds. Every time.**
+
+---
+
+## 🎬 Demo
+
+| Step | Action | Result |
+|------|--------|--------|
+| 1️⃣ | Type your idea in plain language | *"I need an assistant to debug Python code"* |
+| 2️⃣ | Agent analyzes your request | intent · domain · complexity detected |
+| 3️⃣ | Agent structures 5 sections | role · context · task · format · constraints |
+| 4️⃣ | Agent refines into final prompt | fluent, professional, ready to use |
+| 5️⃣ | Copy & paste into any AI | ChatGPT · Claude · Gemini · Mistral |
+
+🌍 **Try it live :** [promptcraft.today](https://promptcraft.today)
 
 ---
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                         FRONTEND                            │
-│          Vanilla JS · HTML · CSS  ·  port 3000              │
-│   Auth modal · Interactive SVG diagram · Results display    │
-└───────────────────────────┬─────────────────────────────────┘
-                            │  HTTP + Bearer JWT
-                            │
-┌───────────────────────────▼─────────────────────────────────┐
-│                      FASTAPI BACKEND  · port 8000            │
-│                                                             │
-│   🔓 POST /auth/register    🔓 POST /auth/login             │
-│   🔒 POST /generate-prompt  (JWT required)                  │
-│                                                             │
-│  ┌───────────────────────────────────────────────────────┐  │
-│  │                  LangGraph Agent                      │  │
-│  │                                                       │  │
-│  │   analyze_input → structure_prompt → refine_output    │  │
-│  │        ↓                  ↓                ↓          │  │
-│  │   intent/domain      5 sections       full_prompt     │  │
-│  │                                                       │  │
-│  │              GPT-4o-mini via LangChain                │  │
-│  └───────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────┐
+│                    FRONTEND — Netlify CDN                    │
+│         Vanilla JS · HTML · CSS  ·  No framework             │
+│   Auth modal · Interactive SVG · Results display             │
+│              prompt-craft26.netlify.app                      │
+└────────────────────────────┬─────────────────────────────────┘
+                             │  HTTPS + Bearer JWT
+                             │
+┌────────────────────────────▼─────────────────────────────────┐
+│               FASTAPI BACKEND — Railway                       │
+│                   promptcraft.today                          │
+│                                                              │
+│   🔓 POST /auth/register    🔓 POST /auth/login              │
+│   🔒 POST /generate-prompt  🔒 GET  /my-prompts              │
+│                                                              │
+│  ┌────────────────────────────────────────────────────────┐  │
+│  │                  LangGraph Agent                       │  │
+│  │                                                        │  │
+│  │  analyze_input → structure_prompt → refine_output      │  │
+│  │       ↓                 ↓                ↓             │  │
+│  │  intent/domain     5 sections       full_prompt        │  │
+│  │                                                        │  │
+│  │           LLaMA 3.3 70B via Groq API                  │  │
+│  └────────────────────────────────────────────────────────┘  │
+│                          │                                   │
+└──────────────────────────┼───────────────────────────────────┘
+                           │
+┌──────────────────────────▼───────────────────────────────────┐
+│              PostgreSQL 16 — Railway                         │
+│         users table · prompt_history table                   │
+│              Persistent · Secure · Scalable                  │
+└──────────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -88,37 +130,44 @@ Users authenticate via **JWT** before accessing the generation pipeline. The int
 ## 📁 Project Structure
 
 ```
-prompt-eng/
+promptcraft/
 │
 ├── 📂 backend/
 │   ├── 📂 agent/
 │   │   ├── __init__.py
-│   │   ├── graph.py          # LangGraph graph definition & compilation
-│   │   ├── nodes.py          # 3 agent nodes: analyze · structure · refine
+│   │   ├── graph.py          # LangGraph graph — 3 nodes pipeline
+│   │   ├── nodes.py          # analyze_input · structure_prompt · refine_output
 │   │   ├── router.py         # FastAPI router for agent endpoints
 │   │   └── state.py          # AgentState TypedDict
 │   │
 │   ├── 📂 auth/
 │   │   ├── __init__.py
-│   │   └── router.py         # JWT auth: register · login · me
+│   │   └── router.py         # JWT auth — register · login · me
+│   │                         # Argon2 password hashing
 │   │
 │   ├── 📂 models/
 │   │   ├── __init__.py
-│   │   └── schemas.py        # Pydantic request/response schemas
+│   │   └── schemas.py        # SQLAlchemy models — User · PromptHistory
 │   │
 │   ├── 📂 db/
-│   │   └── database.py       # DB layer (in-memory → SQLAlchemy)
+│   │   └── database.py       # PostgreSQL connection — SQLAlchemy engine
 │   │
-│   └── main.py               # FastAPI app entry point
+│   └── main.py               # FastAPI app — CORS · Rate limiting · Routes
 │
 ├── 📂 front/
-│   └── index.html            # Single-page frontend (no build step)
+│   ├── index.html            # Single-page app — no build step needed
+│   └── vercel.json           # Netlify/Vercel static config
 │
-├── .env                      # ⚠️ Never commit — local secrets only
+├── 🐳 Dockerfile             # Backend container — python:3.12-slim
+├── 🐳 docker-compose.yml     # Full stack — backend · db · frontend (nginx)
+├── 🐳 nginx.conf             # Nginx config for frontend serving
+├── 🐳 .dockerignore          # Docker build exclusions
+│
+├── .env                      # ⚠️ Never commit — local secrets
 ├── .env.example              # Template for contributors
 ├── .gitignore
 ├── pyproject.toml            # uv project config + pinned dependencies
-├── uv.lock
+├── uv.lock                   # Locked dependency versions
 └── README.md
 ```
 
@@ -130,7 +179,9 @@ prompt-eng/
 |------|-------------|---------|
 | 🐍 Python | `3.12` | [python.org](https://python.org) |
 | 📦 uv | `latest` | `curl -Ls https://astral.sh/uv/install.sh \| sh` |
-| 🔑 OpenAI API Key | — | [platform.openai.com](https://platform.openai.com/api-keys) |
+| 🐘 PostgreSQL | `16` | `sudo apt install postgresql` |
+| 🐳 Docker | `24+` | [docs.docker.com](https://docs.docker.com/get-docker/) |
+| 🔑 Groq API Key | — | [console.groq.com](https://console.groq.com) |
 
 ---
 
@@ -139,8 +190,8 @@ prompt-eng/
 ### 1 · Clone
 
 ```bash
-git clone https://github.com/your-username/prompt-eng.git
-cd prompt-eng
+git clone https://github.com/Ramadiaw12/generate_prompt.git
+cd generate_prompt
 ```
 
 ### 2 · Install dependencies
@@ -149,26 +200,47 @@ cd prompt-eng
 uv sync
 ```
 
-> All dependencies are pinned in `uv.lock`. **Do not use `pip install` directly.**
+> All dependencies are pinned in `uv.lock`. **Never use `pip install` directly.**
 
 ### 3 · Configure environment
 
 ```bash
 cp .env.example .env
-# Fill in OPENAI_API_KEY and SECRET_KEY
+# Fill in your values
 ```
 
-### 4 · Start the backend
+### 4 · Setup PostgreSQL
+
+```bash
+sudo -u postgres psql
+```
+
+```sql
+CREATE DATABASE promptcraft;
+CREATE USER promptuser WITH PASSWORD 'yourpassword';
+GRANT ALL PRIVILEGES ON DATABASE promptcraft TO promptuser;
+ALTER SCHEMA public OWNER TO promptuser;
+\q
+```
+
+### 5 · Start the backend
 
 ```bash
 cd backend
 uv run uvicorn main:app --reload --port 8000
 ```
 
-✅ API running at `http://localhost:8000`  
+✅ API running at `http://localhost:8000`
 📖 Swagger UI at `http://localhost:8000/docs`
 
-### 5 · Start the frontend
+You should see :
+```
+✅ Tables PostgreSQL créées / vérifiées.
+✅ Agent graph compilé et prêt.
+INFO: Application startup complete.
+```
+
+### 6 · Start the frontend
 
 ```bash
 cd front
@@ -179,20 +251,58 @@ python -m http.server 3000
 
 ---
 
+## 🐳 Docker
+
+Run the entire stack with a single command :
+
+```bash
+# Start everything
+docker compose up --build -d
+
+# Check status
+docker compose ps
+
+# View logs
+docker compose logs -f backend
+
+# Stop everything
+docker compose down
+```
+
+**Services launched :**
+
+| Service | URL | Description |
+|---------|-----|-------------|
+| 🚀 Backend | `http://localhost:8000` | FastAPI + LangGraph |
+| 🌐 Frontend | `http://localhost:3000` | Nginx + HTML |
+| 🗄️ Database | `localhost:5433` | PostgreSQL 16 |
+
+---
+
 ## 🔐 Environment Variables
 
 ```bash
 # .env.example
 
-# ── OpenAI ──────────────────────────────
-OPENAI_API_KEY=sk-proj-...
+# ── PostgreSQL ───────────────────────────────────────
+POSTGRES_DB=promptcraft
+POSTGRES_USER=promptuser
+POSTGRES_PASSWORD=your-strong-password
 
-# ── JWT ─────────────────────────────────
+# Local without Docker
+DATABASE_URL=postgresql://promptuser:password@localhost:5432/promptcraft
+# With Docker ("db" = Docker service name)
+# DATABASE_URL=postgresql://promptuser:password@db:5432/promptcraft
+
+# ── JWT ─────────────────────────────────────────────
 # Generate with: openssl rand -hex 32
 SECRET_KEY=your-secret-key-here
+
+# ── Groq API ────────────────────────────────────────
+GROQ_API_KEY=gsk_...
 ```
 
-> ⚠️ `.env` is already in `.gitignore`. Never expose your `OPENAI_API_KEY` publicly.
+> ⚠️ `.env` is already in `.gitignore`. **Never expose your API keys publicly.**
 
 ---
 
@@ -202,8 +312,8 @@ SECRET_KEY=your-secret-key-here
 
 | Method | Endpoint | Auth | Description |
 |--------|----------|:----:|-------------|
-| `POST` | `/auth/register` | ❌ | Create a new user account |
-| `POST` | `/auth/login` | ❌ | Login — returns JWT |
+| `POST` | `/auth/register` | ❌ | Create a new account |
+| `POST` | `/auth/login` | ❌ | Login — returns JWT (7 days) |
 | `GET` | `/auth/me` | ✅ | Get current user info |
 
 <details>
@@ -220,7 +330,8 @@ SECRET_KEY=your-secret-key-here
 // Response 201
 {
   "message": "Compte créé avec succès.",
-  "email": "user@example.com"
+  "email": "user@example.com",
+  "id": 1
 }
 ```
 </details>
@@ -230,7 +341,6 @@ SECRET_KEY=your-secret-key-here
 
 ```
 Content-Type: application/x-www-form-urlencoded
-
 username=user@example.com&password=mypassword
 ```
 
@@ -245,11 +355,13 @@ username=user@example.com&password=mypassword
 
 ---
 
-### 🔒 Generation endpoint
+### 🔒 Protected endpoints
 
-| Method | Endpoint | Auth | Description |
-|--------|----------|:----:|-------------|
-| `POST` | `/generate-prompt` | ✅ Bearer | Run the full agent pipeline |
+| Method | Endpoint | Auth | Rate Limit | Description |
+|--------|----------|:----:|------------|-------------|
+| `POST` | `/generate-prompt` | ✅ | 10/min | Run the agent pipeline |
+| `GET` | `/my-prompts` | ✅ | 20/min | Get prompt history |
+| `GET` | `/health` | ❌ | 30/min | Server health check |
 
 <details>
 <summary><b>POST /generate-prompt</b></summary>
@@ -257,20 +369,20 @@ username=user@example.com&password=mypassword
 ```jsonc
 // Request
 {
-  "user_input": "Je veux un assistant pour rédiger des emails professionnels en anglais"
+  "user_input": "I need an assistant to debug Python code"
 }
 
 // Response 200
 {
-  "intent":        "Rédiger des emails professionnels en anglais",
-  "domain":        "redaction",
+  "intent":        "Create a Python debugging assistant",
+  "domain":        "code",
   "complexity":    "medium",
-  "role":          "You are an expert business communication specialist...",
-  "context":       "The user needs to write professional emails in English...",
-  "task":          "1. Analyze the email context and recipient...",
-  "output_format": "Structured email: subject · opening · body · closing",
-  "constraints":   "Formal tone · no slang · max 300 words",
-  "full_prompt":   "You are an expert business communication specialist..."
+  "role":          "You are an expert Python developer with 10+ years...",
+  "context":       "The user needs help identifying and fixing bugs...",
+  "task":          "1. Analyze the code provided\n2. Identify the bug...",
+  "output_format": "Structured response with: bug location, explanation...",
+  "constraints":   "Focus on Python best practices, explain clearly...",
+  "full_prompt":   "You are an expert Python developer..."
 }
 ```
 </details>
@@ -279,39 +391,47 @@ username=user@example.com&password=mypassword
 
 ## 🤖 Agent Pipeline
 
-The pipeline is a **deterministic LangGraph graph** — no cycles, no branching, predictable latency.
+The pipeline is a **deterministic LangGraph graph** — 3 sequential nodes, no cycles, predictable latency (~3 seconds).
 
 ```
-                     ┌─────────────────────────────┐
-  user_input  ──────►│       analyze_input          │
-                     │                             │
-                     │  model  : gpt-4o-mini        │
-                     │  output : intent             │
-                     │           domain             │
-                     │           complexity         │
-                     └──────────────┬──────────────┘
-                                    │
-                     ┌──────────────▼──────────────┐
-                     │      structure_prompt        │
-                     │                             │
-                     │  model  : gpt-4o-mini        │
-                     │  output : role               │
-                     │           context            │
-                     │           task               │
-                     │           output_format      │
-                     │           constraints        │
-                     └──────────────┬──────────────┘
-                                    │
-                     ┌──────────────▼──────────────┐
-                     │       refine_output          │
-                     │                             │
-                     │  model  : gpt-4o-mini        │
-                     │  output : full_prompt        │
-                     └─────────────────────────────┘
+  user_input
+      │
+      ▼
+┌─────────────────────────────────┐
+│         analyze_input           │
+│  model : LLaMA 3.3 70B (Groq)  │
+│  output: intent                 │
+│          domain                 │
+│          complexity             │
+└──────────────┬──────────────────┘
+               │
+               ▼
+┌─────────────────────────────────┐
+│       structure_prompt          │
+│  model : LLaMA 3.3 70B (Groq)  │
+│  output: role                   │
+│          context                │
+│          task                   │
+│          output_format          │
+│          constraints            │
+└──────────────┬──────────────────┘
+               │
+               ▼
+┌─────────────────────────────────┐
+│         refine_output           │
+│  model : LLaMA 3.3 70B (Groq)  │
+│  output: full_prompt            │
+│          (fluent · professional │
+│           · ready to use)       │
+└─────────────────────────────────┘
+               │
+               ▼
+    💾 Saved to PostgreSQL
+    📤 Returned to frontend
 ```
 
-Each node is a **pure function** `(AgentState) -> AgentState`.  
-Errors are caught per-node and propagated via the `error` key — the pipeline short-circuits gracefully.
+Each node is a **pure function** `(AgentState) -> AgentState`.
+Errors are caught per-node and short-circuit the pipeline gracefully.
 
 ### Adding a new node
 
@@ -323,30 +443,24 @@ def my_new_node(state: AgentState) -> AgentState:
     # ... call LLM ...
     return {**state, "my_new_field": result}
 
-# 2. backend/agent/state.py
-class AgentState(TypedDict):
-    ...
-    my_new_field: str   # add your new key
-
-# 3. backend/agent/graph.py
-graph.add_node("my_new_node", my_new_node)
-graph.add_edge("refine_output", "my_new_node")  # wire it in
-
-# 4. backend/main.py — expose in PromptResponse
-# 5. front/index.html — display the new field
+# 2. backend/agent/state.py — add key to AgentState
+# 3. backend/agent/graph.py — wire the node
+# 4. backend/main.py       — expose in PromptResponse
+# 5. front/index.html      — display the new field
 ```
 
 ---
 
-## 🔑 Authentication
+## 🔑 Authentication & Security
 
-- Tokens signed with **HS256**, valid **7 days**
-- Passwords hashed with **Argon2** (`argon2-cffi`)
-- Client stores token in `localStorage`, sent as `Authorization: Bearer <token>`
-- On `401`, frontend clears session and prompts re-login automatically
-
-> ⚠️ **Current limitation:** users are stored in an **in-memory dict** (`_users_db`).  
-> They are lost on server restart. See [Roadmap](#-roadmap) for the SQLAlchemy migration.
+| Feature | Implementation |
+|---------|---------------|
+| Password hashing | **Argon2** (`argon2-cffi`) — winner of PHC 2015 |
+| Token signing | **JWT HS256** — valid 7 days |
+| Rate limiting | **slowapi** — 10 req/min on generate, 30 req/min on public routes |
+| CORS | Restricted to known frontend domains |
+| SQL injection | Prevented by SQLAlchemy ORM |
+| Secrets | Environment variables — never in code |
 
 ---
 
@@ -356,24 +470,33 @@ Single `index.html` — **no build step, no framework, no bundler.**
 
 | Feature | Detail |
 |---------|--------|
-| 🗺️ Interactive SVG diagram | Clickable nodes with modals explaining each prompt concept |
-| 🔐 Auth modal | Login / Register with tab switching and error handling |
-| ⚡ Generation form | Textarea → API call → 5-section results + full prompt |
+| 🗺️ Interactive SVG diagram | Clickable nodes explaining prompt engineering concepts |
+| 🔐 Auth modal | Login / Register with JWT stored in localStorage |
+| ⚡ Generation form | Textarea → API → 5-section results + full prompt |
 | 📋 Copy to clipboard | One-click copy of the generated prompt |
 | ⌨️ Keyboard shortcut | `Ctrl+Enter` / `Cmd+Enter` to submit |
-| 🎨 Design system | CSS custom properties · DM Serif Display · DM Mono · Instrument Sans |
+| 📱 Responsive | Works on mobile and desktop |
+| 🎨 Design system | CSS custom properties · DM Serif Display · DM Mono |
+
+---
+
+## 🌍 Deployment
+
+| Service | Platform | URL |
+|---------|----------|-----|
+| 🚀 Backend | Railway | [promptcraft.today](https://promptcraft.today) |
+| 🌐 Frontend | Netlify | [prompt-craft26.netlify.app](https://prompt-craft26.netlify.app) |
+| 🗄️ Database | Railway PostgreSQL | Private |
 
 ---
 
 ## 🤝 Contributing
 
-Contributions are welcome and appreciated. Please follow these steps:
-
-### Workflow
+Contributions are welcome ! Please follow these steps :
 
 ```bash
-# 1. Fork the repo and clone your fork
-git clone https://github.com/your-username/prompt-eng.git
+# 1. Fork and clone
+git clone https://github.com/Ramadiaw12/generate_prompt.git
 
 # 2. Create a feature branch
 git checkout -b feat/your-feature-name
@@ -381,24 +504,22 @@ git checkout -b feat/your-feature-name
 # 3. Install dependencies
 uv sync
 
-# 4. Make your changes, test locally
+# 4. Make your changes and test locally
 
-# 5. Commit — use Conventional Commits
+# 5. Commit with Conventional Commits
 git commit -m "feat(agent): add memory node to graph"
 
-# 6. Push and open a Pull Request against main
+# 6. Push and open a Pull Request
 git push origin feat/your-feature-name
 ```
 
 ### Commit Convention
 
-This project follows [Conventional Commits](https://www.conventionalcommits.org/):
-
 | Prefix | When to use |
 |--------|-------------|
 | `feat` | New feature |
 | `fix` | Bug fix |
-| `refactor` | Restructure without changing behavior |
+| `refactor` | Restructure without behavior change |
 | `docs` | Documentation only |
 | `test` | Adding or updating tests |
 | `chore` | Tooling, deps, config |
@@ -409,15 +530,7 @@ This project follows [Conventional Commits](https://www.conventionalcommits.org/
 - ✅ Docstring on every node and route
 - ✅ Keep nodes **pure** — no side effects outside `AgentState`
 - ❌ Never commit `.env` or API keys
-- ❌ Do not use `pip install` — always use `uv add`
-
-### Opening Issues
-
-Please include:
-- Expected vs actual behavior
-- Steps to reproduce
-- Python version (`python --version`)
-- uv version (`uv --version`)
+- ❌ Never use `pip install` — always `uv add`
 
 ---
 
@@ -425,23 +538,45 @@ Please include:
 
 | Status | Feature |
 |--------|---------|
-| 🔲 | **Persistent DB** — SQLite via SQLAlchemy (drop-in for `_users_db`) |
-| 🔲 | **Prompt history** — save and retrieve past generations per user |
-| 🔲 | **Streaming** — stream `refine_output` token-by-token via SSE |
-| 🔲 | **Export** — download generated prompt as `.txt` or `.md` |
-| 🔲 | **Multi-model** — let users choose GPT-4o · Claude · Mistral |
-| 🔲 | **Rate limiting** — per-user request throttling |
-| 🔲 | **Docker** — containerized deployment guide |
-| 🔲 | **Tests** — pytest suite for all nodes and API routes |
+| ✅ | **FastAPI Backend** — REST API with JWT auth |
+| ✅ | **LangGraph Agent** — 3-node pipeline |
+| ✅ | **PostgreSQL** — persistent users + prompt history |
+| ✅ | **Docker** — full containerized stack |
+| ✅ | **Rate Limiting** — brute force protection |
+| ✅ | **Production Deploy** — Railway + Netlify |
+| ✅ | **Custom Domain** — promptcraft.today |
+| 🔲 | **Stripe Payments** — Free · Pro · Team plans |
+| 🔲 | **Prompt History UI** — view past generations in frontend |
+| 🔲 | **Streaming** — token-by-token response via SSE |
+| 🔲 | **Export** — download prompt as `.txt` or `.md` |
+| 🔲 | **Multi-model** — GPT-4o · Claude · Mistral selector |
+| 🔲 | **Tests** — pytest suite for all nodes and routes |
+| 🔲 | **Analytics** — usage dashboard per user |
 
 ---
 
 <div align="center">
 
-Made with 🧠 and ☕ by **DIAWANE Ramatoulaye**
+### 🌍 Try PromptCraft now
+
+**[promptcraft.today](https://promptcraft.today)**
+
+*Transform your ideas into perfect prompts in 3 seconds.*
+
+<br/>
+
+Made with 🧠 ☕ and a lot of debugging by
+
+**DIAWANE Ramatoulaye**
+
+[![GitHub](https://img.shields.io/badge/GitHub-Ramadiaw12-181717?style=for-the-badge&logo=github)](https://github.com/Ramadiaw12)
+[![LinkedIn](https://img.shields.io/badge/LinkedIn-Connect-0077B5?style=for-the-badge&logo=linkedin)](https://linkedin.com/in/votre-profil)
+[![Twitter](https://img.shields.io/badge/Twitter-Follow-1DA1F2?style=for-the-badge&logo=twitter)](https://twitter.com/votre-compte)
+
+<br/>
 
 *Pull requests are welcome. For major changes, please open an issue first.*
 
-[![GitHub](https://img.shields.io/badge/GitHub-Follow-181717?style=for-the-badge&logo=github)](https://github.com/your-username)
+⭐ **Star this repo if PromptCraft helped you !**
 
 </div>
