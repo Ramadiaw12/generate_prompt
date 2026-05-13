@@ -1,6 +1,8 @@
 # =============================================================================
 # Fichier : backend/main.py
 # Rôle    : Point d'entrée FastAPI
+#           - Génération de prompts (Free + Pro)
+#           - Optimisation de prompts (Pro uniquement)
 # Auteur  : DIAWANE Ramatoulaye
 # =============================================================================
 
@@ -12,27 +14,27 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
-# SessionMiddleware : OBLIGATOIRE pour Google OAuth
-# Authlib stocke l'état OAuth dans la session pour éviter les attaques CSRF
-
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+from typing import List, Optional
 
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 
 from agent.graph import build_graph
+from agent.nodes import optimize_prompt
+# On appelle optimize_prompt directement — pas via le graph génération
+# car c'est un pipeline séparé
+
 from auth.router import router as auth_router, get_current_user
 from db.database import get_db, create_tables
 from models.schemas import PromptHistory, User
 
 # ── Rate Limiter ──────────────────────────────────────────────────────────────
-
 limiter = Limiter(key_func=get_remote_address)
 
 # ── Lifespan ──────────────────────────────────────────────────────────────────
-
 graph = None
 
 @asynccontextmanager
@@ -46,21 +48,14 @@ async def lifespan(app: FastAPI):
     print("🛑 Arrêt du serveur.")
 
 # ── App ───────────────────────────────────────────────────────────────────────
-
 app = FastAPI(
     title="PromptCraft API",
-    description="Génère des prompts structurés via un pipeline LangGraph.",
-    version="2.1.0",
+    description="Génère et optimise des prompts via un pipeline LangGraph.",
+    version="3.0.0",
     lifespan=lifespan,
 )
 
-# ⚠️ SessionMiddleware DOIT être avant CORSMiddleware
-app.add_middleware(
-    SessionMiddleware,
-    secret_key=os.getenv("SECRET_KEY", "changez-moi"),
-    # Utilisé pour chiffrer la session OAuth — même clé que JWT
-)
-
+app.add_middleware(SessionMiddleware, secret_key=os.getenv("SECRET_KEY", "changez-moi"))
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -71,22 +66,20 @@ app.add_middleware(
     allow_methods=["GET", "POST"],
     allow_headers=["Authorization", "Content-Type"],
     allow_credentials=True,
-    # allow_credentials=True : nécessaire pour les cookies de session OAuth
 )
 
-# Rate limiter
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
-# Routes auth
 app.include_router(auth_router)
 
 # ── Schémas ───────────────────────────────────────────────────────────────────
 
 class PromptRequest(BaseModel):
+    """Données pour générer un prompt."""
     user_input: str
 
 class PromptResponse(BaseModel):
+    """Résultat de la génération."""
     intent: str
     domain: str
     complexity: str
@@ -97,17 +90,37 @@ class PromptResponse(BaseModel):
     constraints: str
     full_prompt: str
 
-# ── Routes ────────────────────────────────────────────────────────────────────
+class OptimizeRequest(BaseModel):
+    """
+    Données pour optimiser un prompt existant.
+    Fonctionnalité PRO uniquement.
+    """
+    prompt_to_optimize: str  # le prompt existant soumis par l'utilisateur
+
+class OptimizeResponse(BaseModel):
+    """
+    Résultat de l'optimisation.
+    Contient le prompt amélioré + scores + analyse.
+    """
+    score_before:      int          # score qualité avant (0-100)
+    score_after:       int          # score qualité après (0-100)
+    weaknesses:        List[str]    # faiblesses détectées
+    improvements:      List[str]    # améliorations apportées
+    optimized_prompt:  str          # prompt amélioré prêt à l'emploi
+
+# ── Routes publiques ──────────────────────────────────────────────────────────
 
 @app.get("/")
 @limiter.limit("30/minute")
 def root(request: Request):
-    return {"status": "ok", "message": "PromptCraft API v2.1 🚀"}
+    return {"status": "ok", "message": "PromptCraft API v3.0 🚀", "version": "3.0.0"}
 
 @app.get("/health")
 @limiter.limit("30/minute")
 def health(request: Request):
     return {"status": "healthy", "graph_ready": graph is not None, "database": "postgresql"}
+
+# ── Route : Génération de prompt (Free + Pro) ─────────────────────────────────
 
 @app.post("/generate-prompt", response_model=PromptResponse)
 @limiter.limit("10/minute")
@@ -118,13 +131,12 @@ async def generate_prompt(
     db: Session = Depends(get_db),
 ):
     """
-    Génère un prompt structuré en 3 étapes.
-    🔒 Route protégée : JWT requis.
-    ⏱️ Rate limit : 10 requêtes/minute par IP.
+    Génère un prompt structuré en 3 étapes via LangGraph.
+    Disponible pour tous les utilisateurs (Free + Pro).
+    🔒 JWT requis · ⏱️ 10 req/min par IP
     """
     if not body.user_input.strip():
         raise HTTPException(status_code=422, detail="Le champ user_input ne peut pas être vide.")
-
     if graph is None:
         raise HTTPException(status_code=503, detail="Agent non initialisé.")
 
@@ -134,6 +146,11 @@ async def generate_prompt(
         "role": "", "context": "", "task": "",
         "output_format": "", "constraints": "",
         "full_prompt": "", "error": "",
+        # Champs optimisation (vides pour ce pipeline)
+        "prompt_to_optimize": None,
+        "score_before": None, "score_after": None,
+        "weaknesses": None, "improvements": None,
+        "optimized_prompt": None,
     }
 
     try:
@@ -175,6 +192,78 @@ async def generate_prompt(
         full_prompt=final_state.get("full_prompt", ""),
     )
 
+# ── Route : Optimisation de prompt (PRO uniquement) ───────────────────────────
+
+@app.post("/optimize-prompt", response_model=OptimizeResponse)
+@limiter.limit("5/minute")
+async def optimize_prompt_route(
+    request: Request,
+    body: OptimizeRequest,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    """
+    Analyse un prompt existant et génère une version améliorée.
+
+    🔒 FONCTIONNALITÉ PRO UNIQUEMENT
+    ⏱️ Rate limit : 5 optimisations/minute par IP
+
+    Retourne :
+    - Score avant/après (0-100)
+    - Faiblesses détectées
+    - Améliorations apportées
+    - Prompt optimisé prêt à l'emploi
+
+    Note : La vérification du plan Pro sera activée après
+    l'intégration de Lemon Squeezy (prochaine étape).
+    Pour l'instant, route accessible à tous les users connectés.
+    """
+    if not body.prompt_to_optimize.strip():
+        raise HTTPException(
+            status_code=422,
+            detail="Le champ prompt_to_optimize ne peut pas être vide."
+        )
+
+    if len(body.prompt_to_optimize) < 10:
+        raise HTTPException(
+            status_code=422,
+            detail="Le prompt est trop court pour être analysé (minimum 10 caractères)."
+        )
+
+    # Construit l'état initial pour le node optimize_prompt
+    initial_state = {
+        "user_input": "",
+        "intent": "", "domain": "", "complexity": "",
+        "role": "", "context": "", "task": "",
+        "output_format": "", "constraints": "",
+        "full_prompt": "", "error": "",
+        # Champ clé : le prompt à optimiser
+        "prompt_to_optimize": body.prompt_to_optimize.strip(),
+        "score_before": None, "score_after": None,
+        "weaknesses": None, "improvements": None,
+        "optimized_prompt": None,
+    }
+
+    # Appel direct au node optimize_prompt (pas via le graph génération)
+    try:
+        result_state = optimize_prompt(initial_state)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur optimisation : {str(e)}")
+
+    if result_state.get("error"):
+        raise HTTPException(status_code=500, detail=result_state["error"])
+
+    print(f"🔧 Prompt optimisé pour {current_user.email} — score {result_state.get('score_before')} → {result_state.get('score_after')}")
+
+    return OptimizeResponse(
+        score_before=result_state.get("score_before", 50),
+        score_after=result_state.get("score_after", 85),
+        weaknesses=result_state.get("weaknesses", []),
+        improvements=result_state.get("improvements", []),
+        optimized_prompt=result_state.get("optimized_prompt", ""),
+    )
+
+# ── Route : Historique des prompts ───────────────────────────────────────────
 
 @app.get("/my-prompts")
 @limiter.limit("20/minute")
@@ -184,8 +273,8 @@ async def my_prompts(
     db: Session = Depends(get_db),
 ):
     """
-    Retourne les 20 derniers prompts de l'user connecté.
-    🔒 Route protégée : JWT requis.
+    Retourne les 20 derniers prompts générés par l'utilisateur connecté.
+    🔒 JWT requis.
     """
     prompts = (
         db.query(PromptHistory)
@@ -194,7 +283,6 @@ async def my_prompts(
         .limit(20)
         .all()
     )
-
     return {
         "total": len(prompts),
         "prompts": [
@@ -208,4 +296,28 @@ async def my_prompts(
             }
             for p in prompts
         ]
+    }
+
+# ── Route : Infos plan utilisateur ───────────────────────────────────────────
+
+@app.get("/my-plan")
+@limiter.limit("30/minute")
+async def my_plan(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Retourne le plan actuel de l'utilisateur.
+    Sera enrichi après intégration Lemon Squeezy.
+    """
+    return {
+        "email": current_user.email,
+        "plan": getattr(current_user, 'plan', 'free'),
+        "features": {
+            "generate_prompt": True,       # Free + Pro
+            "optimize_prompt": True,       # Pro uniquement (à activer)
+            "export": False,               # Pro uniquement (à venir)
+            "templates": False,            # Pro uniquement (à venir)
+            "batch": False,                # Expert uniquement (à venir)
+        }
     }
