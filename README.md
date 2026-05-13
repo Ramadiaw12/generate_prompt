@@ -21,7 +21,6 @@
 
 <br/>
 
-**🌍 Live Demo:** [promptcraft.today](https://promptcraft.today) &nbsp;·&nbsp;
 **Author:** DIAWANE Ramatoulaye &nbsp;·&nbsp;
 [Report Bug](../../issues) &nbsp;·&nbsp;
 [Request Feature](../../issues) &nbsp;·&nbsp;
