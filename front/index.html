@@ -790,7 +790,7 @@ svg#flow { display: block; width: 100%; overflow: visible; }
         <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Connexion</button>
         <button class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Inscription</button>
       </div>
-      <div class="auth-title" id="auth-title">Bon retour 👋</div>
+      <div class="auth-title" id="auth-title">Bon retour !</div>
       <div class="auth-sub" id="auth-sub">Connectez-vous pour générer vos prompts.</div>
       <button class="auth-close" onclick="closeAuth()">×</button>
     </div>
@@ -1050,7 +1050,7 @@ async function loadHistory() {
           <span class="history-item-badge">${p.complexity || 'medium'}</span>
         </div>
       `;
-      // Click → affiche le prompt dans la section résultats
+      // Click affiche le prompt dans la section résultats
       item.addEventListener('click', () => {
         closeHistory();
         renderResults({
