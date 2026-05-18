@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PromptCraft — Prompt Engineering</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;600;700&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
   --bg:        #f7f4ef;
@@ -484,6 +484,41 @@ svg#flow { display: block; width: 100%; overflow: visible; }
 .chips { display: flex; flex-wrap: wrap; gap: .35rem; }
 .chip { font-family: 'DM Mono', monospace; font-size: .68rem; padding: .28em .75em; border-radius: 100px; border: 1px solid var(--border); background: var(--bg); color: var(--ink); }
 
+
+/* ── Language Selector ── */
+.lang-selector {
+  display: flex; align-items: center; gap: .3rem;
+  background: var(--bg); border: 1px solid var(--border);
+  border-radius: 100px; padding: 3px;
+}
+.lang-btn {
+  font-family: 'DM Mono', monospace; font-size: .65rem;
+  padding: .3em .7em; border-radius: 100px; border: none;
+  background: transparent; color: var(--muted);
+  cursor: pointer; transition: all .18s; font-weight: 500;
+}
+.lang-btn:hover { color: var(--ink); }
+.lang-btn.active { background: var(--ink); color: #fff; }
+
+/* RTL support for Arabic */
+[dir="rtl"] {
+  font-family: 'Instrument Sans', 'Noto Sans Arabic', sans-serif;
+}
+[dir="rtl"] .topnav { flex-direction: row-reverse; }
+[dir="rtl"] .topnav-right { flex-direction: row-reverse; }
+[dir="rtl"] .gen-footer { flex-direction: row-reverse; }
+[dir="rtl"] .mode-selector { flex-direction: row-reverse; }
+[dir="rtl"] .ia-btns { flex-direction: row-reverse; }
+[dir="rtl"] .results-header { flex-direction: row-reverse; }
+[dir="rtl"] .section-card-label { flex-direction: row-reverse; }
+[dir="rtl"] .final-prompt-label { flex-direction: row-reverse; }
+[dir="rtl"] .history-item-meta { flex-direction: row-reverse; }
+[dir="rtl"] #history-sidebar { left: 0; right: auto; border-left: none; border-right: 1px solid var(--border); transform: translateX(-100%); }
+[dir="rtl"] #history-overlay.open #history-sidebar { transform: translateX(0); }
+[dir="rtl"] .history-item:hover { transform: translateX(2px); }
+[dir="rtl"] .auth-top { text-align: right; }
+[dir="rtl"] .auth-close { right: auto; left: 1.4rem; }
+[dir="rtl"] .mobile-menu { direction: rtl; }
 /* ── RESPONSIVE ── */
 @media (max-width: 768px) {
   .topnav { padding: .8rem 1.2rem; }
@@ -508,6 +543,12 @@ svg#flow { display: block; width: 100%; overflow: visible; }
 <nav class="topnav">
   <a href="/" class="topnav-logo">PromptCraft <span>beta</span></a>
   <div class="topnav-right">
+    <!-- Language selector -->
+    <div class="lang-selector" id="lang-selector">
+      <button class="lang-btn active" onclick="setLang('fr')" id="lang-fr">FR</button>
+      <button class="lang-btn" onclick="setLang('en')" id="lang-en">EN</button>
+      <button class="lang-btn" onclick="setLang('ar')" id="lang-ar">AR</button>
+    </div>
     <div class="user-pill" id="user-pill"><div class="user-dot"></div><span id="user-email-display"></span></div>
     <button class="btn-history" id="nav-history-btn" style="display:none" onclick="openHistory()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -1099,6 +1140,383 @@ document.querySelectorAll('.node').forEach(n => {
 document.getElementById('close-btn').addEventListener('click', () => document.getElementById('overlay').classList.remove('open'));
 document.getElementById('overlay').addEventListener('click', e => { if(e.target===document.getElementById('overlay')) document.getElementById('overlay').classList.remove('open'); });
 
+
+// ═══════════════════════════════════════════════
+// I18N — INTERNATIONALISATION
+// ═══════════════════════════════════════════════
+
+const TRANSLATIONS = {
+  fr: {
+    dir: 'ltr',
+    // Nav
+    btn_login: 'Se connecter',
+    btn_signup: 'Commencer →',
+    btn_logout: 'Déconnexion',
+    btn_history: 'Historique',
+    // Header
+    eyebrow: 'Workflow interactif',
+    h1: 'Prompt <em>Engineering</em>',
+    subtitle: 'Cliquez sur chaque bloc pour explorer ses paramètres, entrées et sorties.',
+    // Generate card
+    gen_title: 'Générer votre <em>prompt</em>',
+    gen_locked_text: 'Créez un compte gratuit pour générer des prompts structurés en 3 étapes.',
+    btn_create_account: 'Créer un compte',
+    btn_connect: 'Se connecter',
+    hint_concis: 'CONCIS · 2-3 LIGNES · MOINS DE TOKENS',
+    hint_complet: 'COMPLET · 5 SECTIONS · AGENT · 3 ÉTAPES',
+    hint_expert: '🚀 EXPERT PRO · EXEMPLES · ULTRA-DÉTAILLÉ',
+    btn_generate: 'Générer',
+    btn_generating: 'Analyse en cours…',
+    placeholder_concis: 'Ex : Assistant pour rédiger des emails pro en anglais...',
+    placeholder_complet: "Ex : Je veux un assistant qui m'aide à rédiger des emails professionnels...",
+    placeholder_expert: 'Ex : Je veux un assistant expert pour rédiger des emails B2B...',
+    mode_concis: '⚡ Concis',
+    mode_complet: '📋 Complet',
+    mode_expert: '🚀 Expert',
+    // Results
+    results_title: 'Prompt structuré',
+    label_role: 'Rôle',
+    label_context: 'Contexte',
+    label_task: 'Tâche',
+    label_format: 'Format de sortie',
+    label_constraints: 'Contraintes',
+    final_prompt_label: "Prompt final — prêt à l'emploi",
+    btn_copy: 'Copier',
+    btn_copied: '✓ Copié',
+    ia_launchers_title: 'Ouvrir directement dans',
+    // Auth
+    auth_login_title: 'Bon retour 👋',
+    auth_login_sub: 'Connectez-vous pour générer vos prompts.',
+    auth_signup_title: 'Créer un compte',
+    auth_signup_sub: "Rejoignez la plateforme, c'est gratuit.",
+    tab_login: 'Connexion',
+    tab_signup: 'Inscription',
+    btn_google: 'Continuer avec Google',
+    label_name: 'Nom',
+    label_email: 'Email',
+    label_password: 'Mot de passe',
+    placeholder_name: 'Votre prénom',
+    placeholder_email: 'vous@exemple.com',
+    placeholder_password: '••••••••',
+    // History
+    history_title: '📋 Mes prompts',
+    history_empty: 'Aucun prompt généré pour l'instant.',
+    history_loading: 'Chargement…',
+    // Errors
+    err_empty: 'Décrivez ce que vous souhaitez accomplir.',
+    err_fields: 'Veuillez remplir tous les champs.',
+    err_session: 'Session expirée.',
+    // Legend
+    legend_param: 'Paramètre',
+    legend_structure: 'Structure Prompt',
+    legend_content: 'Contenu Prompt',
+    legend_type: 'Type de prompt',
+    legend_input: 'Entrée utilisateur',
+  },
+
+  en: {
+    dir: 'ltr',
+    btn_login: 'Sign in',
+    btn_signup: 'Get started →',
+    btn_logout: 'Sign out',
+    btn_history: 'History',
+    eyebrow: 'Interactive Workflow',
+    h1: 'Prompt <em>Engineering</em>',
+    subtitle: 'Click each block to explore its parameters, inputs and outputs.',
+    gen_title: 'Generate your <em>prompt</em>',
+    gen_locked_text: 'Create a free account to generate structured prompts in 3 steps.',
+    btn_create_account: 'Create an account',
+    btn_connect: 'Sign in',
+    hint_concis: 'CONCISE · 2-3 LINES · FEWER TOKENS',
+    hint_complet: 'COMPLETE · 5 SECTIONS · AGENT · 3 STEPS',
+    hint_expert: '🚀 EXPERT PRO · EXAMPLES · ULTRA-DETAILED',
+    btn_generate: 'Generate',
+    btn_generating: 'Analyzing…',
+    placeholder_concis: 'Ex: Assistant to write professional emails in English...',
+    placeholder_complet: 'Ex: I want an assistant to help me write professional emails...',
+    placeholder_expert: 'Ex: I want an expert assistant to write and optimize B2B emails...',
+    mode_concis: '⚡ Concise',
+    mode_complet: '📋 Complete',
+    mode_expert: '🚀 Expert',
+    results_title: 'Structured prompt',
+    label_role: 'Role',
+    label_context: 'Context',
+    label_task: 'Task',
+    label_format: 'Output format',
+    label_constraints: 'Constraints',
+    final_prompt_label: 'Final prompt — ready to use',
+    btn_copy: 'Copy',
+    btn_copied: '✓ Copied',
+    ia_launchers_title: 'Open directly in',
+    auth_login_title: 'Welcome back 👋',
+    auth_login_sub: 'Sign in to generate your prompts.',
+    auth_signup_title: 'Create an account',
+    auth_signup_sub: 'Join the platform, it's free.',
+    tab_login: 'Sign in',
+    tab_signup: 'Sign up',
+    btn_google: 'Continue with Google',
+    label_name: 'Name',
+    label_email: 'Email',
+    label_password: 'Password',
+    placeholder_name: 'Your first name',
+    placeholder_email: 'you@example.com',
+    placeholder_password: '••••••••',
+    history_title: '📋 My prompts',
+    history_empty: 'No prompts generated yet.',
+    history_loading: 'Loading…',
+    err_empty: 'Describe what you want to accomplish.',
+    err_fields: 'Please fill in all fields.',
+    err_session: 'Session expired.',
+    legend_param: 'Parameter',
+    legend_structure: 'Prompt Structure',
+    legend_content: 'Prompt Content',
+    legend_type: 'Prompt Type',
+    legend_input: 'User Input',
+  },
+
+  ar: {
+    dir: 'rtl',
+    btn_login: 'تسجيل الدخول',
+    btn_signup: 'ابدأ الآن ←',
+    btn_logout: 'تسجيل الخروج',
+    btn_history: 'السجل',
+    eyebrow: 'سير عمل تفاعلي',
+    h1: 'هندسة <em>البرومبت</em>',
+    subtitle: 'انقر على كل كتلة لاستكشاف معاملاتها ومدخلاتها ومخرجاتها.',
+    gen_title: 'أنشئ <em>برومبتك</em>',
+    gen_locked_text: 'أنشئ حسابًا مجانيًا لتوليد برومبت منظم في 3 خطوات.',
+    btn_create_account: 'إنشاء حساب',
+    btn_connect: 'تسجيل الدخول',
+    hint_concis: 'موجز · 2-3 أسطر · رموز أقل',
+    hint_complet: 'كامل · 5 أقسام · وكيل · 3 خطوات',
+    hint_expert: '🚀 خبير برو · أمثلة · تفصيلي',
+    btn_generate: 'توليد',
+    btn_generating: 'جارٍ التحليل…',
+    placeholder_concis: 'مثال: مساعد لكتابة رسائل بريد إلكتروني احترافية...',
+    placeholder_complet: 'مثال: أريد مساعدًا يساعدني في كتابة رسائل بريد احترافية...',
+    placeholder_expert: 'مثال: أريد مساعدًا خبيرًا لكتابة وتحسين رسائل B2B...',
+    mode_concis: '⚡ موجز',
+    mode_complet: '📋 كامل',
+    mode_expert: '🚀 خبير',
+    results_title: 'البرومبت المنظم',
+    label_role: 'الدور',
+    label_context: 'السياق',
+    label_task: 'المهمة',
+    label_format: 'صيغة المخرجات',
+    label_constraints: 'القيود',
+    final_prompt_label: 'البرومبت النهائي — جاهز للاستخدام',
+    btn_copy: 'نسخ',
+    btn_copied: '✓ تم النسخ',
+    ia_launchers_title: 'افتح مباشرة في',
+    auth_login_title: 'مرحبًا بعودتك 👋',
+    auth_login_sub: 'سجل دخولك لتوليد برومبت.',
+    auth_signup_title: 'إنشاء حساب',
+    auth_signup_sub: 'انضم إلى المنصة، إنه مجاني.',
+    tab_login: 'تسجيل الدخول',
+    tab_signup: 'إنشاء حساب',
+    btn_google: 'المتابعة مع Google',
+    label_name: 'الاسم',
+    label_email: 'البريد الإلكتروني',
+    label_password: 'كلمة المرور',
+    placeholder_name: 'اسمك الأول',
+    placeholder_email: 'you@example.com',
+    placeholder_password: '••••••••',
+    history_title: '📋 برومبتاتي',
+    history_empty: 'لا يوجد برومبت بعد.',
+    history_loading: 'جارٍ التحميل…',
+    err_empty: 'صف ما تريد تحقيقه.',
+    err_fields: 'يرجى ملء جميع الحقول.',
+    err_session: 'انتهت الجلسة.',
+    legend_param: 'معامل',
+    legend_structure: 'بنية البرومبت',
+    legend_content: 'محتوى البرومبت',
+    legend_type: 'نوع البرومبت',
+    legend_input: 'مدخل المستخدم',
+  }
+};
+
+// Langue courante
+let currentLang = localStorage.getItem('promptcraft_lang') || 'fr';
+
+function setLang(lang) {
+  currentLang = lang;
+  localStorage.setItem('promptcraft_lang', lang);
+
+  const t = TRANSLATIONS[lang];
+
+  // Direction RTL/LTR
+  document.documentElement.setAttribute('dir', t.dir);
+  document.documentElement.setAttribute('lang', lang);
+
+  // Boutons langue actif
+  ['fr','en','ar'].forEach(l => {
+    const btn = document.getElementById('lang-' + l);
+    if (btn) btn.classList.toggle('active', l === lang);
+  });
+
+  // Nav
+  setTextContent('nav-login-btn', t.btn_login);
+  setTextContent('nav-signup-btn', t.btn_signup);
+  setTextContent('nav-logout-btn', t.btn_logout);
+
+  // Header
+  const eyebrow = document.querySelector('header .eyebrow');
+  if (eyebrow) eyebrow.textContent = t.eyebrow;
+  const h1 = document.querySelector('header h1');
+  if (h1) h1.innerHTML = t.h1;
+  const subtitle = document.querySelector('header p');
+  if (subtitle) subtitle.textContent = t.subtitle;
+
+  // Generate card
+  const genTitle = document.querySelector('.gen-card-title');
+  if (genTitle) genTitle.innerHTML = t.gen_title;
+  const genLockedP = document.querySelector('.gen-locked p');
+  if (genLockedP) genLockedP.textContent = t.gen_locked_text;
+
+  // Locked buttons
+  const lockedBtns = document.querySelectorAll('.gen-locked-btns .btn');
+  if (lockedBtns[0]) lockedBtns[0].textContent = t.btn_create_account;
+  if (lockedBtns[1]) lockedBtns[1].textContent = t.btn_connect;
+
+  // Mode buttons
+  setTextContent('mode-concis', t.mode_concis + ' ');
+  setTextContent('mode-complet', t.mode_complet + ' ');
+
+  // Hints et placeholders selon mode actuel
+  const hints = { concis: t.hint_concis, complet: t.hint_complet, expert: t.hint_expert };
+  const placeholders = { concis: t.placeholder_concis, complet: t.placeholder_complet, expert: t.placeholder_expert };
+  const hintEl = document.getElementById('gen-hint');
+  if (hintEl) hintEl.textContent = hints[selectedMode];
+  const textarea = document.getElementById('user-input-field');
+  if (textarea) textarea.placeholder = placeholders[selectedMode];
+
+  // Generate button
+  const genBtn = document.getElementById('gen-btn');
+  if (genBtn && !genBtn.disabled) {
+    genBtn.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 8h12M9 3l5 5-5 5"/></svg> ' + t.btn_generate;
+  }
+
+  // Results
+  const resultsTitle = document.querySelector('.results-title');
+  if (resultsTitle) resultsTitle.textContent = t.results_title;
+
+  // Section labels
+  const labels = document.querySelectorAll('.section-card-label');
+  const labelKeys = ['label_role','label_context','label_task','label_format','label_constraints'];
+  labels.forEach((el, i) => { if (labelKeys[i]) el.textContent = t[labelKeys[i]]; });
+
+  // Final prompt label
+  const finalLabel = document.querySelector('.final-prompt-label span');
+  if (finalLabel) finalLabel.textContent = t.final_prompt_label;
+
+  // Copy button
+  const copyBtn = document.getElementById('copy-btn');
+  if (copyBtn && !copyBtn.classList.contains('copied')) copyBtn.textContent = t.btn_copy;
+
+  // IA launchers title
+  const iaTitle = document.querySelector('.ia-launchers-title');
+  if (iaTitle) iaTitle.textContent = t.ia_launchers_title;
+
+  // Auth modal
+  setTextContent('tab-login', t.tab_login);
+  setTextContent('tab-signup', t.tab_signup);
+
+  // Auth title/sub selon mode courant
+  const authTitle = document.getElementById('auth-title');
+  const authSub   = document.getElementById('auth-sub');
+  if (authTitle) authTitle.textContent = authMode === 'login' ? t.auth_login_title : t.auth_signup_title;
+  if (authSub)   authSub.textContent   = authMode === 'login' ? t.auth_login_sub   : t.auth_signup_sub;
+
+  // Google button
+  const gBtn = document.querySelector('.btn-google');
+  if (gBtn) {
+    const svg = gBtn.querySelector('svg');
+    gBtn.textContent = t.btn_google;
+    if (svg) gBtn.prepend(svg);
+  }
+
+  // Auth form labels & placeholders
+  setLabel('input-name',     t.label_name,     t.placeholder_name);
+  setLabel('input-email',    t.label_email,    t.placeholder_email);
+  setLabel('input-password', t.label_password, t.placeholder_password);
+
+  // Auth submit button
+  setTextContent('auth-btn-label', authMode === 'login' ? t.btn_login : t.btn_create_account);
+
+  // History
+  const histTitle = document.querySelector('.history-title');
+  if (histTitle) histTitle.textContent = t.history_title;
+  const histEmpty = document.querySelector('#history-empty p');
+  if (histEmpty) histEmpty.textContent = t.history_empty;
+
+  // Mobile menu buttons
+  const mobLogin  = document.getElementById('mob-login-btn');
+  const mobSignup = document.getElementById('mob-signup-btn');
+  const mobLogout = document.getElementById('mob-logout-btn');
+  if (mobLogin)  mobLogin.textContent  = t.btn_login;
+  if (mobSignup) mobSignup.textContent = t.btn_signup;
+  if (mobLogout) mobLogout.textContent = t.btn_logout;
+
+  // History button (nav + mobile)
+  const navHist = document.getElementById('nav-history-btn');
+  if (navHist) {
+    const svg = navHist.querySelector('svg');
+    navHist.textContent = t.btn_history;
+    if (svg) navHist.prepend(svg);
+  }
+  const mobHist = document.getElementById('mob-history-btn');
+  if (mobHist) mobHist.textContent = '📋 ' + t.btn_history;
+
+  // Legend
+  const legDots = document.querySelectorAll('.leg');
+  const legKeys = ['legend_param','legend_structure','legend_content','legend_type','legend_input'];
+  legDots.forEach((el, i) => {
+    if (!legKeys[i]) return;
+    const dot = el.querySelector('.leg-dot');
+    el.textContent = ' ' + t[legKeys[i]];
+    if (dot) el.prepend(dot);
+  });
+}
+
+// Helpers
+function setTextContent(id, text) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = text;
+}
+function setLabel(inputId, labelText, placeholder) {
+  const input = document.getElementById(inputId);
+  if (input) {
+    input.placeholder = placeholder;
+    const label = input.previousElementSibling;
+    if (label && label.tagName === 'LABEL') label.textContent = labelText;
+  }
+}
+
+// Patch switchAuthTab pour mettre à jour les traductions
+const _origSwitchAuthTab = switchAuthTab;
+function switchAuthTab(mode) {
+  _origSwitchAuthTab(mode);
+  const t = TRANSLATIONS[currentLang];
+  const authTitle = document.getElementById('auth-title');
+  const authSub   = document.getElementById('auth-sub');
+  if (authTitle) authTitle.textContent = mode === 'login' ? t.auth_login_title : t.auth_signup_title;
+  if (authSub)   authSub.textContent   = mode === 'login' ? t.auth_login_sub   : t.auth_signup_sub;
+  setTextContent('auth-btn-label', mode === 'login' ? t.btn_login : t.btn_create_account);
+}
+
+// Patch setMode pour mettre à jour hint/placeholder selon la langue
+const _origSetMode = setMode;
+function setMode(mode) {
+  _origSetMode(mode);
+  const t = TRANSLATIONS[currentLang];
+  const hints = { concis: t.hint_concis, complet: t.hint_complet, expert: t.hint_expert };
+  const placeholders = { concis: t.placeholder_concis, complet: t.placeholder_complet, expert: t.placeholder_expert };
+  const hintEl = document.getElementById('gen-hint');
+  if (hintEl) hintEl.textContent = hints[mode];
+  const textarea = document.getElementById('user-input-field');
+  if (textarea) textarea.placeholder = placeholders[mode];
+}
+
 // ═══════════════════════════════════════════════
 // GOOGLE TOKEN + INIT
 // ═══════════════════════════════════════════════
@@ -1117,6 +1535,7 @@ function readGoogleToken() {
 // ── INIT ──
 readGoogleToken();
 updateUI();
+setLang(currentLang); // applique la langue sauvegardée
 // Vide l'input et cache les résultats à chaque chargement
 document.getElementById('user-input-field').value = '';
 document.getElementById('results-section').classList.remove('show');
