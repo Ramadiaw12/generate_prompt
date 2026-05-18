@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prompt Engineering — Interactive Workflow</title>
+<title>PromptCraft — Prompt Engineering</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -32,57 +32,42 @@
   --shadow-lg: 0 16px 48px rgba(26,22,18,.18);
   --r: 14px;
 }
-
 * { box-sizing: border-box; margin: 0; padding: 0; }
-
 body {
-  background: var(--bg);
-  color: var(--ink);
+  background: var(--bg); color: var(--ink);
   font-family: 'Instrument Sans', sans-serif;
-  min-height: 100vh;
-  overflow-x: hidden;
+  min-height: 100vh; overflow-x: hidden;
 }
-
 body::before {
-  content: '';
-  position: fixed; inset: 0;
+  content: ''; position: fixed; inset: 0;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.04'/%3E%3C/svg%3E");
   pointer-events: none; z-index: 0;
 }
 
-/* ══════════════════════════════════════════
-   TOP NAV + BURGER
-══════════════════════════════════════════ */
+/* ── TOP NAV ── */
 .topnav {
-  position: fixed; top: 0; left: 0; right: 0;
-  z-index: 100;
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
   display: flex; align-items: center; justify-content: space-between;
   padding: .9rem 2rem;
-  background: rgba(247,244,239,.92);
-  backdrop-filter: blur(12px);
+  background: rgba(247,244,239,.92); backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
 }
 .topnav-logo {
-  font-family: 'DM Serif Display', serif;
-  font-size: 1rem; color: var(--ink);
+  font-family: 'DM Serif Display', serif; font-size: 1rem; color: var(--ink);
   display: flex; align-items: center; gap: .5rem;
+  text-decoration: none; cursor: pointer;
 }
 .topnav-logo span {
-  font-family: 'DM Mono', monospace;
-  font-size: .62rem; color: var(--amber);
+  font-family: 'DM Mono', monospace; font-size: .62rem; color: var(--amber);
   letter-spacing: .1em; text-transform: uppercase;
-  background: var(--amber-lt);
-  padding: .2em .6em; border-radius: 100px;
+  background: var(--amber-lt); padding: .2em .6em; border-radius: 100px;
 }
 .topnav-right { display: flex; align-items: center; gap: .75rem; }
 
-/* Burger button — visible only on mobile */
+/* Burger */
 .burger-btn {
-  display: none;
-  flex-direction: column; gap: 5px;
-  background: none; border: none; cursor: pointer;
-  padding: .4rem;
-  z-index: 110;
+  display: none; flex-direction: column; gap: 5px;
+  background: none; border: none; cursor: pointer; padding: .4rem; z-index: 110;
 }
 .burger-btn span {
   display: block; width: 22px; height: 2px;
@@ -93,40 +78,31 @@ body::before {
 .burger-btn.open span:nth-child(2) { opacity: 0; transform: scaleX(0); }
 .burger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
 
-/* Mobile menu drawer */
+/* Mobile menu */
 .mobile-menu {
-  display: none;
-  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(247,244,239,.97);
-  backdrop-filter: blur(16px);
-  z-index: 105;
-  flex-direction: column; align-items: center; justify-content: center;
-  gap: 1.5rem;
-  opacity: 0; pointer-events: none;
-  transition: opacity .25s;
+  display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(247,244,239,.97); backdrop-filter: blur(16px);
+  z-index: 105; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1.5rem; opacity: 0; pointer-events: none; transition: opacity .25s;
 }
 .mobile-menu.open { opacity: 1; pointer-events: all; }
 .mobile-menu .mob-user-pill {
-  font-family: 'DM Mono', monospace;
-  font-size: .75rem; color: var(--muted);
+  font-family: 'DM Mono', monospace; font-size: .75rem; color: var(--muted);
   display: flex; align-items: center; gap: .5rem;
   background: var(--card); border: 1px solid var(--border);
   border-radius: 100px; padding: .5em 1em;
 }
 .mobile-menu .mob-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); }
 .mobile-menu button, .mobile-menu a {
-  font-family: 'Instrument Sans', sans-serif;
-  font-size: 1.1rem; font-weight: 600;
+  font-family: 'Instrument Sans', sans-serif; font-size: 1.1rem; font-weight: 600;
   padding: .8em 2.5em; border-radius: 100px;
-  border: none; cursor: pointer; text-decoration: none;
-  transition: all .18s;
+  border: none; cursor: pointer; text-decoration: none; transition: all .18s;
 }
 .mob-btn-amber { background: var(--amber); color: #fff; box-shadow: 0 3px 12px rgba(232,116,12,.3); }
 .mob-btn-ghost { background: transparent; border: 1.5px solid var(--border) !important; color: var(--muted); }
 .mob-btn-rose  { background: transparent; border: 1.5px solid var(--rose) !important; color: var(--rose); font-size: .9rem !important; }
 .mob-btn-history { background: var(--ink); color: #fff; }
 
-/* desktop nav pills */
 .user-pill {
   display: none; align-items: center; gap: .5rem;
   font-family: 'DM Mono', monospace; font-size: .7rem; color: var(--muted);
@@ -144,159 +120,92 @@ body::before {
 .btn-ghost:hover { border-color: var(--ink); color: var(--ink); }
 .btn-amber { background: var(--amber); color: #fff; box-shadow: 0 2px 8px rgba(232,116,12,.3); }
 .btn-amber:hover { background: #c9620a; transform: translateY(-1px); }
-.btn-ink { background: var(--ink); color: #fff; }
-.btn-ink:hover { background: #2e2820; transform: translateY(-1px); }
 .btn-outline-rose { background: transparent; border: 1px solid var(--rose); color: var(--rose); font-size: .72rem; }
 .btn-outline-rose:hover { background: var(--rose-lt); }
 .btn-history {
   display: flex; align-items: center; gap: .4rem;
   background: var(--ink); color: #fff;
   font-family: 'DM Mono', monospace; font-size: .68rem;
-  padding: .45em 1em; border-radius: 100px; border: none; cursor: pointer;
-  transition: all .18s;
+  padding: .45em 1em; border-radius: 100px; border: none; cursor: pointer; transition: all .18s;
 }
 .btn-history:hover { background: #2e2820; transform: translateY(-1px); }
 
-/* ══════════════════════════════════════════
-   HISTORY SIDEBAR
-══════════════════════════════════════════ */
+/* ── HISTORY SIDEBAR ── */
 #history-overlay {
-  position: fixed; inset: 0;
-  background: rgba(26,22,18,.4);
-  z-index: 150; opacity: 0; pointer-events: none;
-  transition: opacity .25s;
+  position: fixed; inset: 0; background: rgba(26,22,18,.4);
+  z-index: 150; opacity: 0; pointer-events: none; transition: opacity .25s;
 }
 #history-overlay.open { opacity: 1; pointer-events: all; }
-
 #history-sidebar {
-  position: fixed; top: 0; right: 0; bottom: 0;
-  width: min(420px, 92vw);
-  background: var(--card);
-  border-left: 1px solid var(--border);
-  box-shadow: var(--shadow-lg);
-  z-index: 151;
-  transform: translateX(100%);
-  transition: transform .3s cubic-bezier(.22,1,.36,1);
-  display: flex; flex-direction: column;
-  overflow: hidden;
+  position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 92vw);
+  background: var(--card); border-left: 1px solid var(--border);
+  box-shadow: var(--shadow-lg); z-index: 151;
+  transform: translateX(100%); transition: transform .3s cubic-bezier(.22,1,.36,1);
+  display: flex; flex-direction: column; overflow: hidden;
 }
 #history-overlay.open #history-sidebar { transform: translateX(0); }
-
 .history-header {
-  padding: 1.4rem 1.6rem;
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between;
-  flex-shrink: 0;
+  padding: 1.4rem 1.6rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
 }
-.history-title {
-  font-family: 'DM Serif Display', serif;
-  font-size: 1.15rem; color: var(--ink);
-}
+.history-title { font-family: 'DM Serif Display', serif; font-size: 1.15rem; color: var(--ink); }
 .history-close {
   width: 30px; height: 30px; border-radius: 50%;
   background: var(--border); border: none; cursor: pointer;
   font-size: 1rem; color: var(--muted);
-  display: flex; align-items: center; justify-content: center;
-  transition: background .15s;
+  display: flex; align-items: center; justify-content: center; transition: background .15s;
 }
 .history-close:hover { background: var(--ink); color: #fff; }
-
-.history-body {
-  flex: 1; overflow-y: auto; padding: 1rem;
-}
+.history-body { flex: 1; overflow-y: auto; padding: 1rem; }
 .history-body::-webkit-scrollbar { width: 4px; }
 .history-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
 .history-empty {
-  display: flex; flex-direction: column; align-items: center;
-  justify-content: center; height: 100%;
-  gap: .75rem; color: var(--muted);
-  font-family: 'DM Mono', monospace; font-size: .75rem;
-  text-align: center; padding: 2rem;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 100%; gap: .75rem; color: var(--muted);
+  font-family: 'DM Mono', monospace; font-size: .75rem; text-align: center; padding: 2rem;
 }
 .history-empty-icon { font-size: 2.5rem; }
-
 .history-loading {
   display: flex; align-items: center; justify-content: center;
   padding: 2rem; gap: .5rem;
   font-family: 'DM Mono', monospace; font-size: .72rem; color: var(--muted);
 }
-
-/* history item card */
 .history-item {
-  background: var(--bg);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  padding: 1rem 1.1rem;
-  margin-bottom: .7rem;
-  cursor: pointer;
-  transition: all .18s;
-  position: relative;
+  background: var(--bg); border: 1px solid var(--border); border-radius: 12px;
+  padding: 1rem 1.1rem; margin-bottom: .7rem; cursor: pointer; transition: all .18s;
 }
-.history-item:hover {
-  border-color: var(--amber);
-  box-shadow: var(--shadow-sm);
-  transform: translateX(-2px);
-}
+.history-item:hover { border-color: var(--amber); box-shadow: var(--shadow-sm); transform: translateX(-2px); }
 .history-item-domain {
-  font-family: 'DM Mono', monospace; font-size: .6rem;
-  letter-spacing: .1em; text-transform: uppercase;
-  color: var(--amber); margin-bottom: .4rem;
-  display: flex; align-items: center; gap: .4rem;
+  font-family: 'DM Mono', monospace; font-size: .6rem; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--amber); margin-bottom: .4rem; display: flex; align-items: center; gap: .4rem;
 }
-.history-item-domain::before {
-  content: ''; width: 5px; height: 5px; border-radius: 50%;
-  background: currentColor; flex-shrink: 0;
-}
+.history-item-domain::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 .history-item-input {
-  font-size: .84rem; color: var(--ink); line-height: 1.5;
-  margin-bottom: .5rem;
-  display: -webkit-box; -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical; overflow: hidden;
+  font-size: .84rem; color: var(--ink); line-height: 1.5; margin-bottom: .5rem;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
-.history-item-meta {
-  display: flex; align-items: center; justify-content: space-between;
-}
-.history-item-date {
-  font-family: 'DM Mono', monospace; font-size: .6rem; color: var(--muted);
-}
+.history-item-meta { display: flex; align-items: center; justify-content: space-between; }
+.history-item-date { font-family: 'DM Mono', monospace; font-size: .6rem; color: var(--muted); }
 .history-item-badge {
-  font-family: 'DM Mono', monospace; font-size: .58rem;
-  padding: .2em .6em; border-radius: 100px;
-  background: var(--blue-lt); color: var(--blue);
-  letter-spacing: .06em;
+  font-family: 'DM Mono', monospace; font-size: .58rem; padding: .2em .6em; border-radius: 100px;
+  background: var(--blue-lt); color: var(--blue); letter-spacing: .06em;
 }
 
-/* ══════════════════════════════════════════
-   HEADER
-══════════════════════════════════════════ */
-header {
-  padding: 7rem 2rem 2rem; text-align: center; position: relative; z-index: 1;
-}
+/* ── HEADER ── */
+header { padding: 7rem 2rem 2rem; text-align: center; position: relative; z-index: 1; }
 header .eyebrow {
   font-family: 'DM Mono', monospace; font-size: .7rem; font-weight: 500;
-  letter-spacing: .18em; text-transform: uppercase;
-  color: var(--amber); margin-bottom: .8rem;
+  letter-spacing: .18em; text-transform: uppercase; color: var(--amber); margin-bottom: .8rem;
 }
-header h1 {
-  font-family: 'DM Serif Display', serif;
-  font-size: clamp(2rem, 5vw, 3.6rem); line-height: 1.1; color: var(--ink);
-}
+header h1 { font-family: 'DM Serif Display', serif; font-size: clamp(2rem, 5vw, 3.6rem); line-height: 1.1; color: var(--ink); }
 header h1 em { font-style: italic; color: var(--amber); }
-header p {
-  margin-top: .8rem; color: var(--muted); font-size: .9rem;
-  max-width: 520px; margin-inline: auto; line-height: 1.6;
-}
+header p { margin-top: .8rem; color: var(--muted); font-size: .9rem; max-width: 520px; margin-inline: auto; line-height: 1.6; }
 
-/* ── Generate Section ── */
-#generate-section {
-  position: relative; z-index: 1;
-  max-width: 780px; margin: 0 auto; padding: 0 1.5rem 2.5rem;
-}
+/* ── GENERATE ── */
+#generate-section { position: relative; z-index: 1; max-width: 780px; margin: 0 auto; padding: 0 1.5rem 2.5rem; }
 .gen-card {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: 20px; padding: 2rem;
-  box-shadow: var(--shadow-md); position: relative; overflow: hidden;
+  background: var(--card); border: 1px solid var(--border); border-radius: 20px;
+  padding: 2rem; box-shadow: var(--shadow-md); position: relative; overflow: hidden;
 }
 .gen-card::before {
   content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
@@ -305,7 +214,6 @@ header p {
 .gen-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.4rem; }
 .gen-card-title { font-family: 'DM Serif Display', serif; font-size: 1.25rem; color: var(--ink); }
 .gen-card-title em { font-style: italic; color: var(--amber); }
-
 .gen-locked {
   display: flex; flex-direction: column; align-items: center;
   text-align: center; padding: 2rem 1rem; gap: 1rem;
@@ -313,20 +221,34 @@ header p {
 .gen-locked-icon { font-size: 2.5rem; line-height: 1; }
 .gen-locked p { color: var(--muted); font-size: .88rem; line-height: 1.6; max-width: 320px; }
 .gen-locked-btns { display: flex; gap: .75rem; flex-wrap: wrap; justify-content: center; }
-
 .gen-input-wrap { display: none; }
 .gen-input-wrap.show { display: block; }
 
+/* ── MODE SELECTOR ── */
+.mode-selector { display: flex; gap: .5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+.mode-btn {
+  font-family: 'DM Mono', monospace; font-size: .65rem; letter-spacing: .08em;
+  padding: .45em 1em; border-radius: 100px; border: 1.5px solid var(--border);
+  background: var(--bg); color: var(--muted); cursor: pointer; transition: all .18s;
+  display: flex; align-items: center; gap: .4rem;
+}
+.mode-btn:hover { border-color: var(--ink); color: var(--ink); }
+.mode-btn.active { background: var(--ink); color: #fff; border-color: var(--ink); }
+.mode-btn.pro-mode { border-color: var(--amber); color: var(--amber); }
+.mode-btn.pro-mode.active { background: var(--amber); color: #fff; }
+.mode-badge {
+  font-size: .55rem; background: var(--amber); color: #fff;
+  padding: .1em .4em; border-radius: 100px; font-weight: 700;
+}
+
 .gen-textarea {
-  width: 100%; font-family: 'Instrument Sans', sans-serif;
-  font-size: .9rem; color: var(--ink); background: var(--bg);
-  border: 1.5px solid var(--border); border-radius: 12px;
-  padding: 1rem 1.1rem; resize: vertical; min-height: 110px;
+  width: 100%; font-family: 'Instrument Sans', sans-serif; font-size: .9rem;
+  color: var(--ink); background: var(--bg); border: 1.5px solid var(--border);
+  border-radius: 12px; padding: 1rem 1.1rem; resize: vertical; min-height: 110px;
   transition: border-color .18s, box-shadow .18s; outline: none; line-height: 1.6;
 }
 .gen-textarea::placeholder { color: var(--muted); }
 .gen-textarea:focus { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(232,116,12,.12); }
-
 .gen-footer {
   display: flex; align-items: center; justify-content: space-between;
   margin-top: 1rem; flex-wrap: wrap; gap: .75rem;
@@ -342,18 +264,14 @@ header p {
 .gen-submit:hover:not(:disabled) { background: #c9620a; transform: translateY(-1px); }
 .gen-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; }
 .gen-submit svg { width: 16px; height: 16px; }
-
 .spinner {
   width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3);
   border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── Results ── */
-#results-section {
-  display: none; position: relative; z-index: 1;
-  max-width: 780px; margin: 0 auto; padding: 0 1.5rem 3rem;
-}
+/* ── RESULTS ── */
+#results-section { display: none; position: relative; z-index: 1; max-width: 780px; margin: 0 auto; padding: 0 1.5rem 3rem; }
 #results-section.show { display: block; }
 .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem; }
 .results-title { font-family: 'DM Serif Display', serif; font-size: 1.1rem; color: var(--ink); }
@@ -365,39 +283,32 @@ header p {
 }
 .meta-chip.domain { border-color: var(--blue); color: var(--blue); background: var(--blue-lt); }
 .meta-chip.complexity { border-color: var(--green); color: var(--green); background: var(--green-lt); }
-
 .sections-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .9rem; margin-bottom: 1rem; }
 @media (max-width: 600px) { .sections-grid { grid-template-columns: 1fr; } }
-
 .section-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 1.2rem 1.3rem; box-shadow: var(--shadow-sm); }
 .section-card.full { grid-column: 1 / -1; }
 .section-card-label {
-  font-family: 'DM Mono', monospace; font-size: .6rem;
-  letter-spacing: .14em; text-transform: uppercase;
+  font-family: 'DM Mono', monospace; font-size: .6rem; letter-spacing: .14em; text-transform: uppercase;
   margin-bottom: .5rem; display: flex; align-items: center; gap: .4rem;
 }
 .section-card-label::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 .section-card-text { font-size: .84rem; color: var(--ink); line-height: 1.65; }
-
 .final-prompt-card {
   background: var(--ink); color: #fff; border-radius: 16px;
-  padding: 1.6rem; margin-top: .4rem; position: relative; box-shadow: var(--shadow-lg);
+  padding: 1.6rem; margin-top: .4rem; box-shadow: var(--shadow-lg);
 }
 .final-prompt-label {
-  font-family: 'DM Mono', monospace; font-size: .6rem;
-  letter-spacing: .16em; text-transform: uppercase;
+  font-family: 'DM Mono', monospace; font-size: .6rem; letter-spacing: .16em; text-transform: uppercase;
   color: var(--amber-md); margin-bottom: .8rem;
   display: flex; align-items: center; justify-content: space-between;
 }
 .final-prompt-text {
-  font-family: 'DM Mono', monospace; font-size: .78rem;
-  line-height: 1.75; color: rgba(255,255,255,.85);
-  white-space: pre-wrap; max-height: 300px; overflow-y: auto;
+  font-family: 'DM Mono', monospace; font-size: .78rem; line-height: 1.75;
+  color: rgba(255,255,255,.85); white-space: pre-wrap; max-height: 300px; overflow-y: auto;
 }
 .final-prompt-text::-webkit-scrollbar { width: 4px; }
 .final-prompt-text::-webkit-scrollbar-track { background: rgba(255,255,255,.05); }
 .final-prompt-text::-webkit-scrollbar-thumb { background: rgba(255,255,255,.2); border-radius: 2px; }
-
 .copy-btn {
   font-family: 'DM Mono', monospace; font-size: .65rem; letter-spacing: .06em;
   background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.15);
@@ -405,7 +316,6 @@ header p {
 }
 .copy-btn:hover { background: rgba(255,255,255,.2); color: #fff; }
 .copy-btn.copied { background: var(--green); border-color: var(--green); color: #fff; }
-
 .error-banner {
   display: none; background: var(--rose-lt); border: 1px solid var(--rose-md);
   border-radius: 10px; padding: .8rem 1rem; font-size: .82rem;
@@ -413,24 +323,46 @@ header p {
 }
 .error-banner.show { display: block; }
 
-/* ── Legend ── */
+/* ── IA LAUNCHERS ── */
+.ia-launchers { margin-top: 1.2rem; }
+.ia-launchers-title {
+  font-family: 'DM Mono', monospace; font-size: .6rem; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--amber-md); margin-bottom: .8rem; display: flex; align-items: center; gap: .5rem;
+}
+.ia-launchers-title::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,.1); }
+.ia-btns { display: flex; flex-wrap: wrap; gap: .6rem; }
+.ia-btn {
+  display: inline-flex; align-items: center; gap: .5rem;
+  font-family: 'Instrument Sans', sans-serif; font-size: .78rem; font-weight: 600;
+  padding: .5em 1.1em; border-radius: 100px; border: 1.5px solid rgba(255,255,255,.15);
+  background: rgba(255,255,255,.08); color: rgba(255,255,255,.85);
+  cursor: pointer; text-decoration: none; transition: all .2s;
+}
+.ia-btn:hover { background: rgba(255,255,255,.18); border-color: rgba(255,255,255,.3); transform: translateY(-1px); color: #fff; }
+.ia-btn svg { width: 16px; height: 16px; border-radius: 3px; flex-shrink: 0; }
+.ia-btn.chatgpt:hover  { background: rgba(16,163,127,.25); border-color: #10a37f; }
+.ia-btn.claude:hover   { background: rgba(204,136,68,.25);  border-color: #cc8844; }
+.ia-btn.gemini:hover   { background: rgba(66,133,244,.25);  border-color: #4285f4; }
+.ia-btn.deepseek:hover { background: rgba(99,102,241,.25);  border-color: #6366f1; }
+.ia-btn.perplexity:hover { background: rgba(32,178,170,.25); border-color: #20b2aa; }
+.ia-btn.mistral:hover  { background: rgba(255,106,0,.25);   border-color: #ff6a00; }
+
+/* ── LEGEND ── */
 .legend {
   display: flex; flex-wrap: wrap; gap: .6rem;
   justify-content: center; padding: 0 1rem 2.5rem; position: relative; z-index: 1;
 }
 .leg {
   display: flex; align-items: center; gap: .4rem;
-  font-family: 'DM Mono', monospace; font-size: .65rem;
-  letter-spacing: .08em; text-transform: uppercase; color: var(--muted);
-  padding: .3em .8em; border: 1px solid var(--border);
+  font-family: 'DM Mono', monospace; font-size: .65rem; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted); padding: .3em .8em; border: 1px solid var(--border);
   border-radius: 100px; background: var(--card); box-shadow: var(--shadow-sm);
 }
 .leg-dot { width: 9px; height: 9px; border-radius: 50%; }
 
-/* ── Canvas ── */
+/* ── CANVAS ── */
 .canvas-wrap { position: relative; z-index: 1; max-width: 1140px; margin: 0 auto; padding: 0 1.5rem 5rem; }
 svg#flow { display: block; width: 100%; overflow: visible; }
-
 .node { cursor: pointer; }
 .node .card-bg { transition: filter .22s ease, transform .22s ease; filter: drop-shadow(0 3px 8px rgba(26,22,18,.10)); }
 .node:hover .card-bg { filter: drop-shadow(0 8px 24px rgba(26,22,18,.22)); transform: translateY(-3px); transform-box: fill-box; transform-origin: center bottom; }
@@ -438,11 +370,9 @@ svg#flow { display: block; width: 100%; overflow: visible; }
 .node .label { font-family: 'Instrument Sans', sans-serif; font-weight: 700; font-size: 13px; }
 .node .sublabel { font-family: 'DM Mono', monospace; font-size: 8.5px; opacity: .65; }
 .node .badge { font-family: 'DM Mono', monospace; font-size: 7px; letter-spacing: .09em; text-transform: uppercase; font-weight: 500; }
-
 .arr { fill: none; stroke-linecap: round; stroke-linejoin: round; }
 .arr-flow { stroke-dasharray: 7 5; animation: flow 1.8s linear infinite; }
 @keyframes flow { to { stroke-dashoffset: -60; } }
-
 @keyframes fadeSlideUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
 .node { animation: fadeSlideUp .55s cubic-bezier(.22,1,.36,1) both; }
 .n1{animation-delay:.05s} .n2{animation-delay:.12s} .n3{animation-delay:.19s}
@@ -450,18 +380,17 @@ svg#flow { display: block; width: 100%; overflow: visible; }
 .n7{animation-delay:.47s} .n8{animation-delay:.54s} .n9{animation-delay:.61s}
 .n10{animation-delay:.68s} .n11{animation-delay:.75s} .n12{animation-delay:.82s}
 
-/* ── Auth Modal ── */
+/* ── AUTH MODAL ── */
 #auth-overlay {
-  position: fixed; inset: 0; background: rgba(247,244,239,.75);
-  backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center;
+  position: fixed; inset: 0; background: rgba(247,244,239,.75); backdrop-filter: blur(10px);
+  display: flex; align-items: center; justify-content: center;
   z-index: 300; opacity: 0; pointer-events: none; transition: opacity .2s;
 }
 #auth-overlay.open { opacity: 1; pointer-events: all; }
 #auth-modal {
-  background: var(--card); border: 1px solid var(--border);
-  border-radius: 22px; padding: 0; max-width: 420px; width: 92%;
-  box-shadow: var(--shadow-lg); transform: translateY(28px) scale(.96);
-  transition: transform .28s cubic-bezier(.22,1,.36,1); overflow: hidden;
+  background: var(--card); border: 1px solid var(--border); border-radius: 22px; padding: 0;
+  max-width: 420px; width: 92%; box-shadow: var(--shadow-lg);
+  transform: translateY(28px) scale(.96); transition: transform .28s cubic-bezier(.22,1,.36,1); overflow: hidden;
 }
 #auth-overlay.open #auth-modal { transform: translateY(0) scale(1); }
 .auth-top { padding: 2rem 2rem 1.4rem; border-bottom: 1px solid var(--border); position: relative; }
@@ -478,24 +407,20 @@ svg#flow { display: block; width: 100%; overflow: visible; }
 .auth-title { font-family: 'DM Serif Display', serif; font-size: 1.4rem; color: var(--ink); }
 .auth-sub { font-size: .8rem; color: var(--muted); margin-top: .3rem; line-height: 1.5; }
 .auth-close {
-  position: absolute; top: 1.4rem; right: 1.4rem;
-  width: 28px; height: 28px; border-radius: 50%;
-  background: var(--border); border: none; cursor: pointer;
-  font-size: .9rem; color: var(--muted);
+  position: absolute; top: 1.4rem; right: 1.4rem; width: 28px; height: 28px; border-radius: 50%;
+  background: var(--border); border: none; cursor: pointer; font-size: .9rem; color: var(--muted);
   display: flex; align-items: center; justify-content: center; transition: background .15s;
 }
 .auth-close:hover { background: var(--ink); color: #fff; }
 .auth-body { padding: 1.5rem 2rem 2rem; }
 .field { margin-bottom: 1rem; }
 .field label {
-  display: block; font-family: 'DM Mono', monospace;
-  font-size: .62rem; letter-spacing: .1em; text-transform: uppercase;
-  color: var(--muted); margin-bottom: .4rem;
+  display: block; font-family: 'DM Mono', monospace; font-size: .62rem;
+  letter-spacing: .1em; text-transform: uppercase; color: var(--muted); margin-bottom: .4rem;
 }
 .field input {
-  width: 100%; font-family: 'Instrument Sans', sans-serif;
-  font-size: .88rem; color: var(--ink); background: var(--bg);
-  border: 1.5px solid var(--border); border-radius: 10px;
+  width: 100%; font-family: 'Instrument Sans', sans-serif; font-size: .88rem; color: var(--ink);
+  background: var(--bg); border: 1.5px solid var(--border); border-radius: 10px;
   padding: .65em .9em; outline: none; transition: border-color .18s, box-shadow .18s;
 }
 .field input:focus { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(232,116,12,.12); }
@@ -515,7 +440,6 @@ svg#flow { display: block; width: 100%; overflow: visible; }
 }
 .auth-submit:hover:not(:disabled) { background: #c9620a; transform: translateY(-1px); }
 .auth-submit:disabled { opacity: .5; cursor: not-allowed; transform: none; }
-
 .btn-google {
   display: flex; align-items: center; justify-content: center; gap: .6rem;
   width: 100%; padding: .75em; font-family: 'Instrument Sans', sans-serif;
@@ -530,10 +454,10 @@ svg#flow { display: block; width: 100%; overflow: visible; }
 }
 .auth-divider::before, .auth-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
 
-/* ── Node Modal ── */
+/* ── NODE MODAL ── */
 #overlay {
-  position: fixed; inset: 0; background: rgba(247,244,239,.7);
-  backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center;
+  position: fixed; inset: 0; background: rgba(247,244,239,.7); backdrop-filter: blur(8px);
+  display: flex; align-items: center; justify-content: center;
   z-index: 200; opacity: 0; pointer-events: none; transition: opacity .2s;
 }
 #overlay.open { opacity: 1; pointer-events: all; }
@@ -560,9 +484,7 @@ svg#flow { display: block; width: 100%; overflow: visible; }
 .chips { display: flex; flex-wrap: wrap; gap: .35rem; }
 .chip { font-family: 'DM Mono', monospace; font-size: .68rem; padding: .28em .75em; border-radius: 100px; border: 1px solid var(--border); background: var(--bg); color: var(--ink); }
 
-/* ══════════════════════════════════════════
-   RESPONSIVE MOBILE
-══════════════════════════════════════════ */
+/* ── RESPONSIVE ── */
 @media (max-width: 768px) {
   .topnav { padding: .8rem 1.2rem; }
   .topnav-right .btn, .topnav-right .user-pill,
@@ -582,14 +504,11 @@ svg#flow { display: block; width: 100%; overflow: visible; }
 </head>
 <body>
 
-<!-- ── Top Nav ── -->
+<!-- NAV -->
 <nav class="topnav">
-  <a href="/" class="topnav-logo" style="text-decoration:none;color:inherit;cursor:pointer;">PromptCraft <span>beta</span></a>
+  <a href="/" class="topnav-logo">PromptCraft <span>beta</span></a>
   <div class="topnav-right">
-    <div class="user-pill" id="user-pill">
-      <div class="user-dot"></div>
-      <span id="user-email-display"></span>
-    </div>
+    <div class="user-pill" id="user-pill"><div class="user-dot"></div><span id="user-email-display"></span></div>
     <button class="btn-history" id="nav-history-btn" style="display:none" onclick="openHistory()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
       Historique
@@ -598,17 +517,15 @@ svg#flow { display: block; width: 100%; overflow: visible; }
     <button class="btn btn-amber" id="nav-signup-btn" onclick="openAuth('signup')">Commencer →</button>
     <button class="btn btn-outline-rose" id="nav-logout-btn" style="display:none" onclick="logout()">Déconnexion</button>
   </div>
-  <!-- Burger -->
   <button class="burger-btn" id="burger-btn" onclick="toggleMobileMenu()" aria-label="Menu">
     <span></span><span></span><span></span>
   </button>
 </nav>
 
-<!-- Mobile Menu -->
+<!-- MOBILE MENU -->
 <div class="mobile-menu" id="mobile-menu">
   <div class="mob-user-pill" id="mob-user-pill" style="display:none">
-    <div class="mob-dot"></div>
-    <span id="mob-email-display"></span>
+    <div class="mob-dot"></div><span id="mob-email-display"></span>
   </div>
   <button class="mob-btn-history" id="mob-history-btn" style="display:none" onclick="closeMobileMenu(); openHistory()">📋 Historique</button>
   <button class="mob-btn-amber" id="mob-signup-btn" onclick="closeMobileMenu(); openAuth('signup')">Commencer →</button>
@@ -622,7 +539,7 @@ svg#flow { display: block; width: 100%; overflow: visible; }
   <p>Cliquez sur chaque bloc pour explorer ses paramètres, entrées et sorties. Les flèches montrent le flux de données.</p>
 </header>
 
-<!-- ── Generate Section ── -->
+<!-- GENERATE -->
 <div id="generate-section">
   <div class="gen-card">
     <div class="gen-card-header">
@@ -630,22 +547,32 @@ svg#flow { display: block; width: 100%; overflow: visible; }
     </div>
     <div class="gen-locked" id="gen-locked">
       <div class="gen-locked-icon">🔒</div>
-      <p>Créez un compte gratuit pour générer des prompts structurés en 3 étapes : analyse, structuration et raffinement.</p>
+      <p>Créez un compte gratuit pour générer des prompts structurés en 3 étapes.</p>
       <div class="gen-locked-btns">
         <button class="btn btn-amber" onclick="openAuth('signup')">Créer un compte</button>
         <button class="btn btn-ghost" onclick="openAuth('login')">Se connecter</button>
       </div>
     </div>
     <div class="gen-input-wrap" id="gen-input-wrap">
+      <!-- Mode Selector -->
+      <div class="mode-selector">
+        <button class="mode-btn active" id="mode-concis" onclick="setMode('concis')">
+          ⚡ Concis <span style="font-size:.6rem;opacity:.6">(2-3 lignes)</span>
+        </button>
+        <button class="mode-btn" id="mode-complet" onclick="setMode('complet')">
+          📋 Complet <span style="font-size:.6rem;opacity:.6">(5 sections)</span>
+        </button>
+        <button class="mode-btn pro-mode" id="mode-expert" onclick="setMode('expert')">
+          🚀 Expert <span class="mode-badge">PRO</span>
+        </button>
+      </div>
       <textarea class="gen-textarea" id="user-input-field"
-        placeholder="Ex : Je veux un assistant qui m'aide à rédiger des emails professionnels en anglais..."
+        placeholder="Ex : Assistant pour rédiger des emails pro en anglais..."
         rows="4"></textarea>
       <div class="gen-footer">
-        <span class="gen-hint">AGENT · 3 ÉTAPES · LLaMA 3.3</span>
+        <span class="gen-hint" id="gen-hint">CONCIS · 2-3 LIGNES · MOINS DE TOKENS</span>
         <button class="gen-submit" id="gen-btn" onclick="generatePrompt()">
-          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <path d="M2 8h12M9 3l5 5-5 5"/>
-          </svg>
+          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 8h12M9 3l5 5-5 5"/></svg>
           Générer
         </button>
       </div>
@@ -654,7 +581,7 @@ svg#flow { display: block; width: 100%; overflow: visible; }
   </div>
 </div>
 
-<!-- ── Results Section ── -->
+<!-- RESULTS -->
 <div id="results-section">
   <div class="results-header">
     <div class="results-title">Prompt structuré</div>
@@ -665,26 +592,11 @@ svg#flow { display: block; width: 100%; overflow: visible; }
     </div>
   </div>
   <div class="sections-grid">
-    <div class="section-card">
-      <div class="section-card-label" style="color:var(--blue)">Rôle</div>
-      <div class="section-card-text" id="res-role"></div>
-    </div>
-    <div class="section-card">
-      <div class="section-card-label" style="color:var(--teal)">Contexte</div>
-      <div class="section-card-text" id="res-context"></div>
-    </div>
-    <div class="section-card full">
-      <div class="section-card-label" style="color:var(--green)">Tâche</div>
-      <div class="section-card-text" id="res-task"></div>
-    </div>
-    <div class="section-card">
-      <div class="section-card-label" style="color:var(--amber)">Format de sortie</div>
-      <div class="section-card-text" id="res-output-format"></div>
-    </div>
-    <div class="section-card">
-      <div class="section-card-label" style="color:var(--rose)">Contraintes</div>
-      <div class="section-card-text" id="res-constraints"></div>
-    </div>
+    <div class="section-card"><div class="section-card-label" style="color:var(--blue)">Rôle</div><div class="section-card-text" id="res-role"></div></div>
+    <div class="section-card"><div class="section-card-label" style="color:var(--teal)">Contexte</div><div class="section-card-text" id="res-context"></div></div>
+    <div class="section-card full"><div class="section-card-label" style="color:var(--green)">Tâche</div><div class="section-card-text" id="res-task"></div></div>
+    <div class="section-card"><div class="section-card-label" style="color:var(--amber)">Format de sortie</div><div class="section-card-text" id="res-output-format"></div></div>
+    <div class="section-card"><div class="section-card-label" style="color:var(--rose)">Contraintes</div><div class="section-card-text" id="res-constraints"></div></div>
   </div>
   <div class="final-prompt-card">
     <div class="final-prompt-label">
@@ -692,10 +604,40 @@ svg#flow { display: block; width: 100%; overflow: visible; }
       <button class="copy-btn" id="copy-btn" onclick="copyPrompt()">Copier</button>
     </div>
     <div class="final-prompt-text" id="res-full-prompt"></div>
+    <!-- IA Launchers -->
+    <div class="ia-launchers">
+      <div class="ia-launchers-title">Ouvrir directement dans</div>
+      <div class="ia-btns">
+        <a class="ia-btn chatgpt" id="btn-chatgpt" href="#" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="#10a37f"><path d="M22.28 9.6a5.85 5.85 0 00-.52-4.84 6.05 6.05 0 00-6.5-2.9A5.85 5.85 0 0011.1.5a6.05 6.05 0 00-5.77 4.19 5.85 5.85 0 00-3.91 2.84 6.05 6.05 0 00.75 7.1 5.85 5.85 0 00.52 4.84 6.05 6.05 0 006.5 2.9 5.85 5.85 0 004.16 1.86 6.05 6.05 0 005.77-4.19 5.85 5.85 0 003.91-2.84 6.05 6.05 0 00-.75-7.1z"/></svg>
+          ChatGPT
+        </a>
+        <a class="ia-btn claude" id="btn-claude" href="#" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="#cc8844"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" fill="white" font-size="10" font-weight="bold">C</text></svg>
+          Claude
+        </a>
+        <a class="ia-btn gemini" id="btn-gemini" href="#" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="#4285f4"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          Gemini
+        </a>
+        <a class="ia-btn deepseek" id="btn-deepseek" href="#" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="#6366f1"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" fill="white" font-size="8" font-weight="bold">DS</text></svg>
+          DeepSeek
+        </a>
+        <a class="ia-btn perplexity" id="btn-perplexity" href="#" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="#20b2aa"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/></svg>
+          Perplexity
+        </a>
+        <a class="ia-btn mistral" id="btn-mistral" href="#" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="#ff6a00"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>
+          Mistral
+        </a>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- ── Legend ── -->
+<!-- LEGEND -->
 <div class="legend">
   <div class="leg"><div class="leg-dot" style="background:#e8740c"></div> Paramètre</div>
   <div class="leg"><div class="leg-dot" style="background:#1a5fb4"></div> Structure Prompt</div>
@@ -704,7 +646,7 @@ svg#flow { display: block; width: 100%; overflow: visible; }
   <div class="leg"><div class="leg-dot" style="background:#0f7070"></div> Entrée utilisateur</div>
 </div>
 
-<!-- ── SVG Flow ── -->
+<!-- SVG -->
 <div class="canvas-wrap">
 <svg id="flow" viewBox="0 0 1060 820" xmlns="http://www.w3.org/2000/svg">
 <defs>
@@ -764,12 +706,11 @@ svg#flow { display: block; width: 100%; overflow: visible; }
 </svg>
 </div>
 
-<!-- ── Node Modal ── -->
+<!-- NODE MODAL -->
 <div id="overlay">
   <div id="modal">
     <div id="modal-header">
-      <div id="modal-bar"></div>
-      <div id="modal-eyebrow"></div>
+      <div id="modal-bar"></div><div id="modal-eyebrow"></div>
       <h2 id="modal-title"></h2>
       <button id="close-btn" aria-label="Fermer">×</button>
     </div>
@@ -782,15 +723,15 @@ svg#flow { display: block; width: 100%; overflow: visible; }
   </div>
 </div>
 
-<!-- ── Auth Modal ── -->
+<!-- AUTH MODAL -->
 <div id="auth-overlay">
   <div id="auth-modal">
     <div class="auth-top">
       <div class="auth-pill">
-        <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Connexion</button>
-        <button class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Inscription</button>
+        <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Connexion</button>
+        <button class="auth-tab" id="tab-signup" onclick="switchAuthTab('signup')">Inscription</button>
       </div>
-      <div class="auth-title" id="auth-title">Bon retour !</div>
+      <div class="auth-title" id="auth-title">Bon retour 👋</div>
       <div class="auth-sub" id="auth-sub">Connectez-vous pour générer vos prompts.</div>
       <button class="auth-close" onclick="closeAuth()">×</button>
     </div>
@@ -825,7 +766,7 @@ svg#flow { display: block; width: 100%; overflow: visible; }
   </div>
 </div>
 
-<!-- ── History Sidebar ── -->
+<!-- HISTORY SIDEBAR -->
 <div id="history-overlay" onclick="handleHistoryOverlayClick(event)">
   <div id="history-sidebar">
     <div class="history-header">
@@ -839,7 +780,7 @@ svg#flow { display: block; width: 100%; overflow: visible; }
       </div>
       <div class="history-empty" id="history-empty" style="display:none">
         <div class="history-empty-icon">🗂️</div>
-        <p>Aucun prompt généré pour l'instant.<br/>Créez votre premier prompt !</p>
+        <p>Aucun prompt généré pour l'instant.</p>
       </div>
       <div id="history-list"></div>
     </div>
@@ -847,36 +788,36 @@ svg#flow { display: block; width: 100%; overflow: visible; }
 </div>
 
 <script>
+// ═══════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════
 const API = 'https://promptcraft.today';
+// Pour tester en local : const API = 'http://localhost:8000';
 
-let currentMode = 'login';
-let authToken = localStorage.getItem('auth_token') || null;
-let userEmail = localStorage.getItem('user_email') || null;
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let authMode    = 'login';   // 'login' | 'signup'
+let selectedMode = 'concis'; // 'concis' | 'complet' | 'expert'
+let authToken   = localStorage.getItem('auth_token') || null;
+let userEmail   = localStorage.getItem('user_email') || null;
 
 function isLoggedIn() { return !!authToken; }
 
-// ══════════════════════════════════════════
+// ═══════════════════════════════════════════════
 // UI UPDATE
-// ══════════════════════════════════════════
+// ═══════════════════════════════════════════════
 function updateUI() {
   const loggedIn = isLoggedIn();
-
-  // Desktop nav
-  document.getElementById('nav-login-btn').style.display  = loggedIn ? 'none' : '';
-  document.getElementById('nav-signup-btn').style.display = loggedIn ? 'none' : '';
-  document.getElementById('nav-logout-btn').style.display = loggedIn ? '' : 'none';
+  document.getElementById('nav-login-btn').style.display   = loggedIn ? 'none' : '';
+  document.getElementById('nav-signup-btn').style.display  = loggedIn ? 'none' : '';
+  document.getElementById('nav-logout-btn').style.display  = loggedIn ? '' : 'none';
   document.getElementById('nav-history-btn').style.display = loggedIn ? '' : 'none';
-
-  // User pill
   const pill = document.getElementById('user-pill');
   if (loggedIn && userEmail) {
     pill.classList.add('show');
     document.getElementById('user-email-display').textContent = userEmail;
-  } else {
-    pill.classList.remove('show');
-  }
-
-  // Mobile menu
+  } else { pill.classList.remove('show'); }
   document.getElementById('mob-login-btn').style.display   = loggedIn ? 'none' : '';
   document.getElementById('mob-signup-btn').style.display  = loggedIn ? 'none' : '';
   document.getElementById('mob-logout-btn').style.display  = loggedIn ? '' : 'none';
@@ -885,26 +826,21 @@ function updateUI() {
   if (loggedIn && userEmail) {
     mobPill.style.display = 'flex';
     document.getElementById('mob-email-display').textContent = userEmail;
-  } else {
-    mobPill.style.display = 'none';
-  }
-
-  // Generate card
+  } else { mobPill.style.display = 'none'; }
   document.getElementById('gen-locked').style.display = loggedIn ? 'none' : '';
   const wrap = document.getElementById('gen-input-wrap');
   wrap.style.display = loggedIn ? 'block' : 'none';
   wrap.classList.toggle('show', loggedIn);
 }
 
-// ══════════════════════════════════════════
+// ═══════════════════════════════════════════════
 // MOBILE MENU
-// ══════════════════════════════════════════
+// ═══════════════════════════════════════════════
 function toggleMobileMenu() {
-  const btn  = document.getElementById('burger-btn');
+  const btn = document.getElementById('burger-btn');
   const menu = document.getElementById('mobile-menu');
   btn.classList.toggle('open');
   menu.classList.toggle('open');
-  // Prevent body scroll when menu is open
   document.body.style.overflow = menu.classList.contains('open') ? 'hidden' : '';
 }
 function closeMobileMenu() {
@@ -913,22 +849,41 @@ function closeMobileMenu() {
   document.body.style.overflow = '';
 }
 
-// ══════════════════════════════════════════
+// ═══════════════════════════════════════════════
+// MODE SELECTOR
+// ═══════════════════════════════════════════════
+function setMode(mode) {
+  if (mode === 'expert' && !isLoggedIn()) { openAuth('signup'); return; }
+  selectedMode = mode;
+  ['concis','complet','expert'].forEach(m => {
+    const btn = document.getElementById('mode-' + m);
+    if (btn) btn.classList.toggle('active', m === mode);
+  });
+  const hints = {
+    concis:  'CONCIS · 2-3 LIGNES · MOINS DE TOKENS',
+    complet: 'COMPLET · 5 SECTIONS · AGENT · 3 ÉTAPES',
+    expert:  '🚀 EXPERT PRO · EXEMPLES · ULTRA-DÉTAILLÉ',
+  };
+  const placeholders = {
+    concis:  'Ex : Assistant pour rédiger des emails pro en anglais...',
+    complet: "Ex : Je veux un assistant qui m'aide à rédiger des emails professionnels en anglais...",
+    expert:  'Ex : Je veux un assistant expert pour rédiger, corriger et optimiser des emails B2B...',
+  };
+  document.getElementById('gen-hint').textContent = hints[mode];
+  document.getElementById('user-input-field').placeholder = placeholders[mode];
+}
+
+// ═══════════════════════════════════════════════
 // AUTH
-// ══════════════════════════════════════════
-function openAuth(mode) { switchTab(mode); document.getElementById('auth-overlay').classList.add('open'); }
+// ═══════════════════════════════════════════════
+function openAuth(mode) { switchAuthTab(mode); document.getElementById('auth-overlay').classList.add('open'); }
 function closeAuth() {
   document.getElementById('auth-overlay').classList.remove('open');
   document.getElementById('auth-error').classList.remove('show');
-  clearAuthFields();
+  ['input-name','input-email','input-password'].forEach(id => { const el = document.getElementById(id); if(el) el.value=''; });
 }
-function clearAuthFields() {
-  ['input-name','input-email','input-password'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.value = '';
-  });
-}
-function switchTab(mode) {
-  currentMode = mode;
+function switchAuthTab(mode) {
+  authMode = mode;
   document.getElementById('tab-login').classList.toggle('active', mode === 'login');
   document.getElementById('tab-signup').classList.toggle('active', mode === 'signup');
   document.getElementById('field-name').style.display = mode === 'signup' ? 'block' : 'none';
@@ -943,7 +898,6 @@ function showAuthError(msg) {
   const el = document.getElementById('auth-error');
   el.textContent = msg; el.classList.add('show');
 }
-
 async function submitAuth() {
   const btn = document.getElementById('auth-submit-btn');
   const email = document.getElementById('input-email').value.trim();
@@ -953,25 +907,16 @@ async function submitAuth() {
   document.getElementById('auth-btn-label').textContent = '…';
   try {
     let res, data;
-    if (currentMode === 'signup') {
+    if (authMode === 'signup') {
       const name = document.getElementById('input-name').value.trim();
-      res = await fetch(`${API}/auth/register`, {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name })
-      });
+      res = await fetch(`${API}/auth/register`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email,password,name}) });
       data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Erreur inscription');
-      res = await fetch(`${API}/auth/login`, {
-        method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ username: email, password })
-      });
+      res = await fetch(`${API}/auth/login`, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: new URLSearchParams({username:email,password}) });
       data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Erreur connexion');
     } else {
-      res = await fetch(`${API}/auth/login`, {
-        method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: new URLSearchParams({ username: email, password })
-      });
+      res = await fetch(`${API}/auth/login`, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: new URLSearchParams({username:email,password}) });
       data = await res.json();
       if (!res.ok) throw new Error(data.detail || 'Email ou mot de passe incorrect');
     }
@@ -979,29 +924,25 @@ async function submitAuth() {
     localStorage.setItem('auth_token', authToken);
     localStorage.setItem('user_email', userEmail);
     closeAuth(); updateUI();
-  } catch (err) {
-    showAuthError(err.message);
-  } finally {
+  } catch(err) { showAuthError(err.message); }
+  finally {
     btn.disabled = false;
-    document.getElementById('auth-btn-label').textContent =
-      currentMode === 'login' ? 'Se connecter' : 'Créer mon compte';
+    document.getElementById('auth-btn-label').textContent = authMode === 'login' ? 'Se connecter' : 'Créer mon compte';
   }
 }
-
 function logout() {
   authToken = null; userEmail = null;
   localStorage.removeItem('auth_token'); localStorage.removeItem('user_email');
   document.getElementById('results-section').classList.remove('show');
   closeHistory(); updateUI();
 }
-
 document.getElementById('auth-overlay').addEventListener('click', e => {
   if (e.target === document.getElementById('auth-overlay')) closeAuth();
 });
 
-// ══════════════════════════════════════════
+// ═══════════════════════════════════════════════
 // HISTORY SIDEBAR
-// ══════════════════════════════════════════
+// ═══════════════════════════════════════════════
 function openHistory() {
   document.getElementById('history-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -1014,68 +955,35 @@ function closeHistory() {
 function handleHistoryOverlayClick(e) {
   if (e.target === document.getElementById('history-overlay')) closeHistory();
 }
-
 async function loadHistory() {
   const loading = document.getElementById('history-loading');
   const empty   = document.getElementById('history-empty');
   const list    = document.getElementById('history-list');
-
-  loading.style.display = 'flex';
-  empty.style.display   = 'none';
-  list.innerHTML        = '';
-
+  loading.style.display = 'flex'; empty.style.display = 'none'; list.innerHTML = '';
   try {
-    const res = await fetch(`${API}/my-prompts`, {
-      headers: { 'Authorization': `Bearer ${authToken}` }
-    });
+    const res = await fetch(`${API}/my-prompts`, { headers:{'Authorization':`Bearer ${authToken}`} });
     if (res.status === 401) { logout(); closeHistory(); openAuth('login'); return; }
     const data = await res.json();
     loading.style.display = 'none';
-
-    if (!data.prompts || data.prompts.length === 0) {
-      empty.style.display = 'flex'; return;
-    }
-
+    if (!data.prompts || data.prompts.length === 0) { empty.style.display = 'flex'; return; }
     data.prompts.forEach(p => {
-      const date = new Date(p.created_at).toLocaleDateString('fr-FR', {
-        day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
-      });
+      const date = new Date(p.created_at).toLocaleDateString('fr-FR', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
       const item = document.createElement('div');
       item.className = 'history-item';
-      item.innerHTML = `
-        <div class="history-item-domain">${p.domain || 'autre'}</div>
-        <div class="history-item-input">${p.user_input}</div>
-        <div class="history-item-meta">
-          <span class="history-item-date">${date}</span>
-          <span class="history-item-badge">${p.complexity || 'medium'}</span>
-        </div>
-      `;
-      // Click affiche le prompt dans la section résultats
+      item.innerHTML = `<div class="history-item-domain">${p.domain||'autre'}</div><div class="history-item-input">${p.user_input}</div><div class="history-item-meta"><span class="history-item-date">${date}</span><span class="history-item-badge">${p.complexity||'medium'}</span></div>`;
       item.addEventListener('click', () => {
         closeHistory();
-        renderResults({
-          intent: '',
-          domain: p.domain || '',
-          complexity: p.complexity || '',
-          role: '', context: '', task: '', output_format: '', constraints: '',
-          full_prompt: p.full_prompt || ''
-        });
-        // Scroll vers les résultats
-        setTimeout(() => {
-          document.getElementById('results-section').scrollIntoView({ behavior: 'smooth' });
-        }, 300);
+        renderResults({ intent:'', domain:p.domain||'', complexity:p.complexity||'', role:'', context:'', task:'', output_format:'', constraints:'', full_prompt:p.full_prompt||'' });
+        setTimeout(() => document.getElementById('results-section').scrollIntoView({behavior:'smooth'}), 300);
       });
       list.appendChild(item);
     });
-  } catch (err) {
-    loading.style.display = 'none';
-    empty.style.display   = 'flex';
-  }
+  } catch(err) { loading.style.display='none'; empty.style.display='flex'; }
 }
 
-// ══════════════════════════════════════════
+// ═══════════════════════════════════════════════
 // GENERATE PROMPT
-// ══════════════════════════════════════════
+// ═══════════════════════════════════════════════
 async function generatePrompt() {
   const input = document.getElementById('user-input-field').value.trim();
   const errEl = document.getElementById('gen-error');
@@ -1087,26 +995,25 @@ async function generatePrompt() {
   document.getElementById('results-section').classList.remove('show');
   try {
     const res = await fetch(`${API}/generate-prompt`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
-      body: JSON.stringify({ user_input: input })
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${authToken}`},
+      body: JSON.stringify({ user_input:input, mode:selectedMode })
     });
     if (res.status === 401) { logout(); openAuth('login'); throw new Error('Session expirée.'); }
     const data = await res.json();
     if (!res.ok) throw new Error(data.detail || 'Erreur serveur');
     renderResults(data);
-  } catch (err) {
-    errEl.textContent = err.message; errEl.classList.add('show');
-  } finally {
+  } catch(err) { errEl.textContent = err.message; errEl.classList.add('show'); }
+  finally {
     btn.disabled = false;
-    btn.innerHTML = `<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 8h12M9 3l5 5-5 5"/></svg> Générer`;
+    btn.innerHTML = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 8h12M9 3l5 5-5 5"/></svg> Générer';
   }
 }
 
 function renderResults(data) {
   document.getElementById('meta-intent').textContent     = data.intent || '';
-  document.getElementById('meta-domain').textContent     = data.domain ? '⬡ ' + data.domain : '';
-  document.getElementById('meta-complexity').textContent = data.complexity ? '◎ ' + data.complexity : '';
+  document.getElementById('meta-domain').textContent     = data.domain ? '⬡ '+data.domain : '';
+  document.getElementById('meta-complexity').textContent = data.complexity ? '◎ '+data.complexity : '';
   document.getElementById('res-role').textContent          = data.role || '';
   document.getElementById('res-context').textContent       = data.context || '';
   document.getElementById('res-task').textContent          = data.task || '';
@@ -1116,12 +1023,12 @@ function renderResults(data) {
   const copyBtn = document.getElementById('copy-btn');
   copyBtn.textContent = 'Copier'; copyBtn.classList.remove('copied');
   document.getElementById('results-section').classList.add('show');
-  document.getElementById('results-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('results-section').scrollIntoView({behavior:'smooth',block:'start'});
+  updateIALaunchers(data.full_prompt);
 }
 
 function copyPrompt() {
-  const text = document.getElementById('res-full-prompt').textContent;
-  navigator.clipboard.writeText(text).then(() => {
+  navigator.clipboard.writeText(document.getElementById('res-full-prompt').textContent).then(() => {
     const btn = document.getElementById('copy-btn');
     btn.textContent = '✓ Copié'; btn.classList.add('copied');
     setTimeout(() => { btn.textContent = 'Copier'; btn.classList.remove('copied'); }, 2000);
@@ -1132,28 +1039,48 @@ document.getElementById('user-input-field')?.addEventListener('keydown', e => {
   if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) generatePrompt();
 });
 
-// ══════════════════════════════════════════
+// ═══════════════════════════════════════════════
+// IA LAUNCHERS
+// ═══════════════════════════════════════════════
+function updateIALaunchers(promptText) {
+  if (!promptText) return;
+  const encoded = encodeURIComponent(promptText);
+  const launchers = {
+    chatgpt:    `https://chatgpt.com/?q=${encoded}`,
+    claude:     `https://claude.ai/new?q=${encoded}`,
+    gemini:     `https://gemini.google.com/app?q=${encoded}`,
+    deepseek:   `https://chat.deepseek.com/?q=${encoded}`,
+    perplexity: `https://www.perplexity.ai/?q=${encoded}`,
+    mistral:    `https://chat.mistral.ai/chat?q=${encoded}`,
+  };
+  Object.entries(launchers).forEach(([ia, url]) => {
+    const btn = document.getElementById('btn-'+ia);
+    if (btn) btn.href = url;
+  });
+}
+
+// ═══════════════════════════════════════════════
 // NODE MODAL
-// ══════════════════════════════════════════
+// ═══════════════════════════════════════════════
 const DATA = {
-  "max-tokens":{color:"#e8740c",tag:"Paramètre",title:"Max Tokens",desc:"Définit la longueur maximale de la réponse en tokens. Un token correspond environ à 4 caractères en anglais (¾ de mot). Ce paramètre contrôle le coût et la verbosité de la réponse.",inputs:["Entier (ex : 512, 1024, 4096)"],outputs:["Longueur max du texte généré","Troncature automatique si dépassé"],note:["Plus haut = réponse plus longue","Impact sur le coût API","Compte input + output"]},
-  "temperature":{color:"#e8740c",tag:"Paramètre",title:"Temperature",desc:"Contrôle le degré de créativité et d'aléa dans les réponses. Une valeur basse (proche de 0) rend le modèle déterministe et factuel ; une valeur haute (>1) le rend créatif et imprévisible.",inputs:["Float entre 0.0 et 2.0"],outputs:["Distribution de probabilité sur les tokens","Variabilité de la réponse"],note:["0 = déterministe","1 = équilibré",">1 = créatif / aléatoire","Interagit avec Top P"]},
-  "top-p":{color:"#e8740c",tag:"Paramètre",title:"Top P (Nucleus Sampling)",desc:"Stratégie d'échantillonnage : le modèle considère uniquement les tokens dont la probabilité cumulée atteint P. Top P=0.9 signifie qu'on ignore les 10% de tokens les moins probables.",inputs:["Float entre 0.0 et 1.0"],outputs:["Ensemble de tokens candidats","Réponse plus ou moins diversifiée"],note:["0.1 = très focused","0.9 = large choix","Ne pas combiner avec Temperature élevée"]},
-  "freq-penalty":{color:"#e8740c",tag:"Paramètre",title:"Frequency Penalty",desc:"Pénalise les tokens déjà apparus dans le texte en proportion de leur fréquence. Réduit les répétitions et favorise la diversité lexicale dans les longues réponses.",inputs:["Float entre -2.0 et 2.0"],outputs:["Moins de répétitions de mots","Vocabulaire plus varié"],note:["0 = pas de pénalité",">0 = moins de répétitions","Utile pour les longues générations"]},
-  "prompt-central":{color:"#1a5fb4",tag:"Concept Central",title:"Prompt",desc:"Un prompt est un ensemble spécifique d'instructions envoyées à un LLM pour accomplir une tâche. Il combine des paramètres (qui contrôlent le comportement du modèle) et une structure (qui organise le contenu).",inputs:["Paramètres (Temperature, Tokens…)","Structure (System, Few Shot, User Input)","Clé API + Modèle cible"],outputs:["Réponse texte du LLM","Tokens générés","Métadonnées (usage, finish_reason)"],note:["= instruction + contexte + format","Qualité du prompt ∝ qualité réponse","L'engineering est itératif"]},
-  "system-msg":{color:"#276f4c",tag:"Structure — Fixe",title:"System Message",desc:"Instructions claires expliquant la tâche que le LLM doit accomplir. Doit inclure le format attendu de l'entrée utilisateur, le format de sortie attendu et une chaîne de pensée (chain-of-thought) pour guider le raisonnement.",inputs:["Description du rôle du LLM","Format d'entrée attendu","Format de sortie attendu","Règles et contraintes"],outputs:["Comportement du modèle cadré","Contexte persistant pour la session"],note:["Partie FIXE du prompt","Envoyé à chaque requête","Invisible pour l'utilisateur final"]},
-  "few-shot-ex":{color:"#276f4c",tag:"Structure — Fixe",title:"Few Shot Examples",desc:"Paires Input→Output qui délimitent la réponse attendue pour des entrées exemplaires. Les sorties n'ont pas besoin d'être parfaites ('golden') — elles servent à calibrer le style et le format.",inputs:["2 à 10 paires Input/Output","Exemples représentatifs du cas d'usage"],outputs:["LLM calibré sur le format","Réduction des hallucinations","Meilleure cohérence"],note:["0-shot = sans exemple","1-shot = 1 exemple","Few-shot = 2–10 exemples","More = better (jusqu'à un point)"]},
-  "user-input":{color:"#0f7070",tag:"Structure — Variable",title:"User Input",desc:"L'entrée présentée dans le format défini dans le System Message. C'est la seule partie du prompt qui change à chaque requête — le reste (System + Few Shot) reste fixe.",inputs:["Texte libre de l'utilisateur","Données structurées (JSON, CSV…)","Questions ou commandes"],outputs:["Réponse contextualisée du LLM","Résultat selon le format défini"],note:["Partie VARIABLE du prompt","Format dicté par le System Message","Validé avant envoi"]},
-  "zero-shot":{color:"#b5193b",tag:"Type de Prompt",title:"Zero Shot Prompt",desc:"Le modèle répond sans aucun exemple préalable. On se fie uniquement aux capacités de raisonnement du LLM pré-entraîné. Idéal pour les tâches simples et bien définies.",inputs:["Instruction seule","Aucun exemple fourni"],outputs:["Réponse basée uniquement sur pre-training","Variable selon le modèle"],note:["Simple et rapide","Moins fiable pour tâches complexes","Bon point de départ"]},
-  "few-shot-out":{color:"#b5193b",tag:"Type de Prompt",title:"Few Shot Prompt",desc:"Le modèle reçoit quelques exemples input/output avant de traiter la vraie requête. Cette technique 'in-context learning' améliore significativement la qualité et la cohérence.",inputs:["2 à 10 exemples structurés","Instruction de la tâche","Entrée réelle à traiter"],outputs:["Réponse alignée sur les exemples","Format respecté","Meilleure précision"],note:["Technique la plus efficace","Coût en tokens plus élevé","Exemples = patterns à imiter"]},
-  "fixed-part":{color:"#276f4c",tag:"Partie du Prompt",title:"Fixed Part of the Prompt",desc:"La partie stable du prompt qui ne change pas entre les requêtes. Elle contient le System Message et les Few Shot Examples. Elle définit les 'rails' dans lesquels le modèle doit raisonner.",inputs:["System Message rédigé","Few Shot Examples sélectionnés"],outputs:["Contexte stable pour le LLM","Comportement prévisible","Économie de tokens à terme"],note:["Peut être mis en cache (API)","Doit être testé et validé","Core de l'engineering"]},
-  "variable-part":{color:"#0f7070",tag:"Partie du Prompt",title:"Variable Part of the Prompt",desc:"La seule partie qui change d'une requête à l'autre : l'entrée utilisateur. Elle doit respecter le format défini dans le System Message pour garantir une réponse de qualité.",inputs:["Input utilisateur en temps réel","Format respectant le System Message"],outputs:["Requête complète envoyée au LLM","Réponse individualisée"],note:["Change à chaque appel","Doit être validée/sanitisée","Couplée à la Fixed Part"]},
-  "prompt-types":{color:"#b5193b",tag:"Référence",title:"Types de Prompt & Contexte",desc:"Cinq familles de prompts couvrent l'essentiel des cas d'usage. La fenêtre de contexte (context window) détermine combien de tokens le modèle peut traiter en une seule requête.",inputs:["Objectif de la tâche","Contraintes du modèle","Budget tokens disponible"],outputs:["Choix du type de prompt","Architecture du prompt optimisée"],note:["GPT-3.5 : 4 096 tokens","GPT-4-turbo : 128 000 tokens","Mixtral 8×7B : 128 000 tokens","1 token ≈ 4 caractères"]}
+  "max-tokens":{color:"#e8740c",tag:"Paramètre",title:"Max Tokens",desc:"Définit la longueur maximale de la réponse en tokens.",inputs:["Entier (ex : 512, 1024, 4096)"],outputs:["Longueur max du texte généré"],note:["Plus haut = réponse plus longue","Impact sur le coût API"]},
+  "temperature":{color:"#e8740c",tag:"Paramètre",title:"Temperature",desc:"Contrôle le degré de créativité dans les réponses.",inputs:["Float entre 0.0 et 2.0"],outputs:["Variabilité de la réponse"],note:["0 = déterministe","1 = équilibré",">1 = créatif"]},
+  "top-p":{color:"#e8740c",tag:"Paramètre",title:"Top P",desc:"Nucleus sampling — considère uniquement les tokens dont la probabilité cumulée atteint P.",inputs:["Float entre 0.0 et 1.0"],outputs:["Réponse plus ou moins diversifiée"],note:["0.1 = très focused","0.9 = large choix"]},
+  "freq-penalty":{color:"#e8740c",tag:"Paramètre",title:"Frequency Penalty",desc:"Pénalise les tokens déjà apparus pour réduire les répétitions.",inputs:["Float entre -2.0 et 2.0"],outputs:["Moins de répétitions"],note:["0 = pas de pénalité",">0 = moins de répétitions"]},
+  "prompt-central":{color:"#1a5fb4",tag:"Concept Central",title:"Prompt",desc:"Ensemble d'instructions envoyées à un LLM pour accomplir une tâche.",inputs:["Paramètres","Structure","Clé API"],outputs:["Réponse texte du LLM"],note:["= instruction + contexte + format","Qualité du prompt ∝ qualité réponse"]},
+  "system-msg":{color:"#276f4c",tag:"Structure — Fixe",title:"System Message",desc:"Instructions claires expliquant la tâche que le LLM doit accomplir.",inputs:["Description du rôle","Format d'entrée","Format de sortie"],outputs:["Comportement du modèle cadré"],note:["Partie FIXE du prompt","Envoyé à chaque requête"]},
+  "few-shot-ex":{color:"#276f4c",tag:"Structure — Fixe",title:"Few Shot Examples",desc:"Paires Input→Output qui calibrent le style et le format attendu.",inputs:["2 à 10 paires Input/Output"],outputs:["LLM calibré sur le format"],note:["0-shot = sans exemple","Few-shot = 2–10 exemples"]},
+  "user-input":{color:"#0f7070",tag:"Structure — Variable",title:"User Input",desc:"L'entrée présentée dans le format défini dans le System Message.",inputs:["Texte libre","Données structurées"],outputs:["Réponse contextualisée du LLM"],note:["Partie VARIABLE du prompt","Change à chaque requête"]},
+  "zero-shot":{color:"#b5193b",tag:"Type de Prompt",title:"Zero Shot Prompt",desc:"Le modèle répond sans aucun exemple préalable.",inputs:["Instruction seule"],outputs:["Réponse basée sur pre-training"],note:["Simple et rapide","Moins fiable pour tâches complexes"]},
+  "few-shot-out":{color:"#b5193b",tag:"Type de Prompt",title:"Few Shot Prompt",desc:"Le modèle reçoit quelques exemples avant de traiter la requête.",inputs:["Exemples structurés","Instruction"],outputs:["Réponse alignée sur les exemples"],note:["Technique la plus efficace","Coût en tokens plus élevé"]},
+  "fixed-part":{color:"#276f4c",tag:"Partie du Prompt",title:"Fixed Part",desc:"Partie stable du prompt — System Message + Few Shot Examples.",inputs:["System Message","Few Shot Examples"],outputs:["Contexte stable pour le LLM"],note:["Peut être mis en cache","Core de l'engineering"]},
+  "variable-part":{color:"#0f7070",tag:"Partie du Prompt",title:"Variable Part",desc:"La seule partie qui change à chaque requête : l'entrée utilisateur.",inputs:["Input utilisateur en temps réel"],outputs:["Requête complète envoyée au LLM"],note:["Change à chaque appel","Couplée à la Fixed Part"]},
+  "prompt-types":{color:"#b5193b",tag:"Référence",title:"Types de Prompt & Contexte",desc:"Cinq familles de prompts + fenêtres de contexte par modèle.",inputs:["Objectif de la tâche","Budget tokens"],outputs:["Choix du type de prompt"],note:["GPT-3.5 : 4 096 tokens","GPT-4-turbo : 128 000 tokens","1 token ≈ 4 caractères"]}
 };
 
 function chips(arr, el) {
   el.innerHTML = '';
-  arr.forEach(t => { const c = document.createElement('span'); c.className = 'chip'; c.textContent = t; el.appendChild(c); });
+  arr.forEach(t => { const c = document.createElement('span'); c.className='chip'; c.textContent=t; el.appendChild(c); });
 }
 document.querySelectorAll('.node').forEach(n => {
   n.addEventListener('click', () => {
@@ -1170,26 +1097,27 @@ document.querySelectorAll('.node').forEach(n => {
   });
 });
 document.getElementById('close-btn').addEventListener('click', () => document.getElementById('overlay').classList.remove('open'));
-document.getElementById('overlay').addEventListener('click', e => { if (e.target === document.getElementById('overlay')) document.getElementById('overlay').classList.remove('open'); });
+document.getElementById('overlay').addEventListener('click', e => { if(e.target===document.getElementById('overlay')) document.getElementById('overlay').classList.remove('open'); });
 
-// ══════════════════════════════════════════
+// ═══════════════════════════════════════════════
 // GOOGLE TOKEN + INIT
-// ══════════════════════════════════════════
+// ═══════════════════════════════════════════════
 function readGoogleToken() {
   const params = new URLSearchParams(window.location.search);
-  const token  = params.get('token');
-  const email  = params.get('email');
+  const token = params.get('token');
+  const email = params.get('email');
   if (token && email) {
     authToken = token; userEmail = email;
     localStorage.setItem('auth_token', token);
     localStorage.setItem('user_email', email);
     window.history.replaceState({}, document.title, '/');
-    updateUI();
   }
 }
 
+// ── INIT ──
 readGoogleToken();
 updateUI();
+// Vide l'input et cache les résultats à chaque chargement
 document.getElementById('user-input-field').value = '';
 document.getElementById('results-section').classList.remove('show');
 </script>
