@@ -77,6 +77,8 @@ app.include_router(auth_router)
 class PromptRequest(BaseModel):
     """Données pour générer un prompt."""
     user_input: str
+    mode: Optional[str] = "complet"   # concis | complet | expert
+    lang: Optional[str] = "fr"        # fr | en | ar
 
 class PromptResponse(BaseModel):
     """Résultat de la génération."""
@@ -146,6 +148,8 @@ async def generate_prompt(
         "role": "", "context": "", "task": "",
         "output_format": "", "constraints": "",
         "full_prompt": "", "error": "",
+        "mode": body.mode or "complet",   # concis | complet | expert
+        "lang": body.lang or "fr",        # fr | en | ar
         # Champs optimisation (vides pour ce pipeline)
         "prompt_to_optimize": None,
         "score_before": None, "score_after": None,

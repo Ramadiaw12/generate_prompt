@@ -1,13 +1,13 @@
 # =============================================================================
 # Fichier : backend/agent/nodes.py
-# Rôle    : Nodes LangGraph — pipeline de génération + optimisation de prompts
-# Auteur  : DIAWANE Ramatoulaye
+# Rôle    : Nodes LangGraph — génération de prompts
+#           Mode concis  → prompt 2-3 lignes
+#           Mode complet → prompt 5 sections détaillées
+#           Mode expert  → prompt ultra-détaillé avec exemples
+#           Langue       → prompt généré dans la langue choisie (fr/en/ar)
 # =============================================================================
 
-import os
-import json
-import re
-
+import os, json, re
 from dotenv import load_dotenv
 load_dotenv("../.env")
 
@@ -15,54 +15,59 @@ from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage, SystemMessage
 from agent.state import AgentState
 
-# ── Modèle partagé ────────────────────────────────────────────────────────────
 llm = ChatGroq(
     model="llama-3.3-70b-versatile",
     api_key=os.getenv("GROQ_API_KEY"),
     temperature=0,
 )
 
-# ─────────────────────────────────────────────────────────────────────────────
-# HELPER : nettoie le JSON retourné par le LLM
-# Supprime les caractères de contrôle qui cassent json.loads()
-# ─────────────────────────────────────────────────────────────────────────────
+# ── Langue → instructions ─────────────────────────────────────────────────────
+LANG_INSTRUCTIONS = {
+    "fr": "Réponds UNIQUEMENT en français. Génère le prompt final en français.",
+    "en": "Respond ONLY in English. Generate the final prompt in English.",
+    "ar": "أجب فقط باللغة العربية. اكتب البرومبت النهائي باللغة العربية.",
+}
 
+def get_lang_instruction(lang: str) -> str:
+    return LANG_INSTRUCTIONS.get(lang, LANG_INSTRUCTIONS["fr"])
+
+# ── Helper JSON ───────────────────────────────────────────────────────────────
 def clean_json(text: str) -> str:
-    """
-    Nettoie le texte brut retourné par le LLM avant de le parser en JSON.
-    - Supprime les balises markdown ```json ... ```
-    - Supprime les caractères de contrôle invalides dans le JSON
-    """
     text = re.sub(r"```json|```", "", text).strip()
-    # Remplace les sauts de ligne DANS les valeurs JSON par \n littéral
-    # pour éviter le "Invalid control character" de json.loads()
-    text = re.sub(r'(?<!\\)\n', '\\n', text)
-    text = re.sub(r'(?<!\\)\r', '\\r', text)
-    text = re.sub(r'(?<!\\)\t', '\\t', text)
-    return text
-
+    # Remplace les sauts de ligne dans les valeurs JSON
+    in_string = False
+    result = []
+    i = 0
+    while i < len(text):
+        c = text[i]
+        if c == '"' and (i == 0 or text[i-1] != '\\'):
+            in_string = not in_string
+        if in_string and c == '\n':
+            result.append('\\n')
+        elif in_string and c == '\r':
+            result.append('\\r')
+        elif in_string and c == '\t':
+            result.append('\\t')
+        else:
+            result.append(c)
+        i += 1
+    return ''.join(result)
 
 # =============================================================================
 # NODE 1 : analyze_input
-# Comprend l'intention, le domaine et la complexité de la demande
 # =============================================================================
-
 def analyze_input(state: AgentState) -> AgentState:
-    """
-    Analyse la saisie brute du user.
-    Retourne : intent, domain, complexity.
-    """
-    system = SystemMessage(content="""
-Tu es un expert en analyse de requêtes pour la génération de prompts.
-Analyse la demande de l'utilisateur et retourne UNIQUEMENT un JSON valide sur UNE SEULE LIGNE avec :
-- intent : ce que l'utilisateur veut accomplir (1 phrase courte)
-- domain : le domaine principal parmi [code, redaction, analyse, image, data, education, business, autre]
-- complexity : niveau de complexité parmi [simple, medium, complex]
+    lang = state.get("lang", "fr")
+    lang_instr = get_lang_instruction(lang)
 
-Exemple : {"intent": "Créer un assistant pour déboguer du code Python", "domain": "code", "complexity": "medium"}
+    system = SystemMessage(content=f"""
+Tu es un expert en analyse de requêtes pour la génération de prompts.
+{lang_instr}
+Analyse la demande et retourne UNIQUEMENT un JSON valide sur UNE SEULE LIGNE :
+{{"intent": "intention courte", "domain": "code|redaction|analyse|image|data|education|business|autre", "complexity": "simple|medium|complex"}}
 Ne mets RIEN avant ou après le JSON.
 """)
-    human = HumanMessage(content=f"Demande utilisateur : {state['user_input']}")
+    human = HumanMessage(content=f"Demande : {state['user_input']}")
 
     try:
         response = llm.invoke([system, human])
@@ -80,35 +85,65 @@ Ne mets RIEN avant ou après le JSON.
 
 # =============================================================================
 # NODE 2 : structure_prompt
-# Génère les 5 sections du prompt structuré
+# Adapté selon le mode : concis / complet / expert
 # =============================================================================
-
 def structure_prompt(state: AgentState) -> AgentState:
-    """
-    Génère les 5 sections : role, context, task, output_format, constraints.
-    """
     if state.get("error"):
         return state
 
-    system = SystemMessage(content="""
-Tu es un expert en prompt engineering.
-Génère les 5 sections d'un prompt structuré de haute qualité.
-Retourne UNIQUEMENT un JSON valide sur UNE SEULE LIGNE avec ces clés exactes :
-- role : le rôle / persona que l'IA doit adopter
-- context : le contexte et les informations de fond nécessaires
-- task : la tâche précise à accomplir
-- output_format : le format attendu de la réponse
-- constraints : les contraintes et choses à éviter
+    mode = state.get("mode", "complet")
+    lang = state.get("lang", "fr")
+    lang_instr = get_lang_instruction(lang)
 
-Sois précis et actionnable. Ne mets RIEN avant ou après le JSON.
+    # ── Mode CONCIS : prompt court, économe en tokens ─────────────────────────
+    if mode == "concis":
+        system = SystemMessage(content=f"""
+Tu es un expert en prompt engineering.
+{lang_instr}
+
+IMPORTANT : Tu génères un prompt CONCIS — maximum 2-3 lignes, efficace, direct.
+Pas de sections longues. Pas d'explications. Juste l'essentiel.
+
+Retourne UNIQUEMENT un JSON valide sur UNE SEULE LIGNE :
+{{"role": "rôle en 1 phrase max", "context": "", "task": "tâche en 1 phrase directe", "output_format": "format en quelques mots", "constraints": "1-2 contraintes max"}}
+""")
+
+    # ── Mode EXPERT : prompt ultra-détaillé avec exemples ────────────────────
+    elif mode == "expert":
+        system = SystemMessage(content=f"""
+Tu es un expert senior en prompt engineering.
+{lang_instr}
+
+Tu génères un prompt EXPERT ultra-détaillé et professionnel avec :
+- Rôle très précis avec expertise spécifique
+- Contexte riche et détaillé
+- Tâche décomposée en étapes claires
+- Format de sortie précis avec structure attendue
+- Contraintes strictes et exemples concrets
+
+Retourne UNIQUEMENT un JSON valide sur UNE SEULE LIGNE :
+{{"role": "rôle expert détaillé", "context": "contexte riche et complet", "task": "tâche décomposée en étapes", "output_format": "format précis avec structure", "constraints": "contraintes strictes + exemples"}}
+""")
+
+    # ── Mode COMPLET (défaut) : 5 sections équilibrées ───────────────────────
+    else:
+        system = SystemMessage(content=f"""
+Tu es un expert en prompt engineering.
+{lang_instr}
+
+Tu génères un prompt COMPLET et structuré avec 5 sections équilibrées.
+Chaque section doit être précise et professionnelle.
+
+Retourne UNIQUEMENT un JSON valide sur UNE SEULE LIGNE :
+{{"role": "rôle et persona claire", "context": "contexte et informations de fond", "task": "tâche précise à accomplir", "output_format": "format attendu de la réponse", "constraints": "contraintes et limites"}}
 """)
 
     human = HumanMessage(content=f"""
-Demande originale : {state['user_input']}
+Demande : {state['user_input']}
 Intention : {state.get('intent', '')}
 Domaine : {state.get('domain', '')}
 Complexité : {state.get('complexity', '')}
-Génère les 5 sections.
+Mode : {mode}
 """)
 
     try:
@@ -129,24 +164,43 @@ Génère les 5 sections.
 
 # =============================================================================
 # NODE 3 : refine_output
-# Assemble et améliore le prompt final
+# Assemble le prompt final selon le mode et la langue
 # =============================================================================
-
 def refine_output(state: AgentState) -> AgentState:
-    """
-    Assemble les sections en un prompt final cohérent et fluide.
-    """
     if state.get("error"):
         return state
 
-    system = SystemMessage(content="""
+    mode = state.get("mode", "complet")
+    lang = state.get("lang", "fr")
+    lang_instr = get_lang_instruction(lang)
+
+    # Instructions d'assemblage selon le mode
+    if mode == "concis":
+        assembly_instr = """
+Assemble ces sections en UN prompt COURT de 2-3 lignes maximum.
+Sois direct et efficace. Supprime tout ce qui est superflu.
+Le prompt doit être utilisable immédiatement, sans introduction.
+IMPORTANT : 2-3 lignes MAXIMUM. Pas plus.
+"""
+    elif mode == "expert":
+        assembly_instr = """
+Assemble ces sections en un prompt EXPERT ultra-professionnel et détaillé.
+Utilise une structure claire avec des marqueurs visuels si nécessaire.
+Le prompt doit être complet, précis et directement utilisable par un professionnel.
+Inclus des exemples concrets si pertinent.
+"""
+    else:
+        assembly_instr = """
+Assemble ces sections en un prompt COMPLET, fluide et professionnel.
+Garde toutes les informations importantes mais reste concis.
+Le prompt doit être naturel et directement utilisable.
+"""
+
+    system = SystemMessage(content=f"""
 Tu es un expert en prompt engineering.
-Assemble les 5 sections en un prompt final professionnel, fluide et prêt à l'emploi.
-Règles :
-- Garde toutes les informations importantes
-- Rends le prompt naturel et cohérent
-- Commence directement par le contenu du prompt
-- Retourne UNIQUEMENT le texte du prompt final, sans JSON, sans balises.
+{lang_instr}
+{assembly_instr}
+Retourne UNIQUEMENT le texte du prompt final. Pas de JSON, pas de balises, pas d'introduction.
 """)
 
     human = HumanMessage(content=f"""
@@ -155,7 +209,6 @@ CONTEXTE : {state.get('context', '')}
 TÂCHE : {state.get('task', '')}
 FORMAT : {state.get('output_format', '')}
 CONTRAINTES : {state.get('constraints', '')}
-Assemble en un prompt final fluide.
 """)
 
     try:
@@ -167,113 +220,63 @@ Assemble en un prompt final fluide.
 
 
 # =============================================================================
-# NODE 4 : optimize_prompt  ← NOUVEAU — Fonctionnalité PRO
-# Analyse un prompt existant et génère une version améliorée + score
+# NODE 4 : optimize_prompt (PRO)
 # =============================================================================
-
 def optimize_prompt(state: AgentState) -> AgentState:
-    """
-    Analyse un prompt existant soumis par l'utilisateur et retourne :
-    - score_before  : score de qualité du prompt original (0-100)
-    - score_after   : score du prompt optimisé (0-100)
-    - weaknesses    : liste des faiblesses détectées
-    - improvements  : liste des améliorations apportées
-    - optimized_prompt : le prompt amélioré, prêt à l'emploi
-
-    C'est une fonctionnalité RÉSERVÉE AU PLAN PRO.
-    Le prompt à optimiser est passé via state['prompt_to_optimize'].
-    """
     if state.get("error"):
         return state
 
-    # Le prompt à optimiser est dans un champ dédié
+    lang = state.get("lang", "fr")
+    lang_instr = get_lang_instruction(lang)
     prompt_to_optimize = state.get("prompt_to_optimize", "")
+
     if not prompt_to_optimize:
-        return {**state, "error": "Erreur optimize_prompt: aucun prompt fourni à optimiser."}
+        return {**state, "error": "Aucun prompt fourni à optimiser."}
 
-    # ── Étape 1 : Analyse des faiblesses ─────────────────────────────────────
-    system_analyze = SystemMessage(content="""
-Tu es un expert senior en prompt engineering avec 10 ans d'expérience.
-Analyse le prompt fourni et retourne UNIQUEMENT un JSON valide sur UNE SEULE LIGNE avec :
-- score_before : score de qualité du prompt original de 0 à 100 (sois honnête et critique)
-- weaknesses : tableau de 3 à 5 faiblesses spécifiques détectées (phrases courtes)
-- missing_elements : tableau des éléments manquants parmi [role, context, task, output_format, constraints, examples]
-
-Critères d'évaluation :
-- Clarté et précision (0-25 pts)
-- Structure et organisation (0-25 pts)  
-- Spécificité du contexte (0-25 pts)
-- Format de sortie défini (0-25 pts)
-
-Ne mets RIEN avant ou après le JSON.
-""")
-
-    human_analyze = HumanMessage(content=f"Prompt à analyser : {prompt_to_optimize}")
-
-    try:
-        response_analyze = llm.invoke([system_analyze, human_analyze])
-        text_analyze = clean_json(response_analyze.content.strip())
-        analysis = json.loads(text_analyze)
-        score_before = analysis.get("score_before", 50)
-        weaknesses = analysis.get("weaknesses", [])
-        missing_elements = analysis.get("missing_elements", [])
-    except Exception as e:
-        return {**state, "error": f"Erreur optimize_prompt (analyse): {str(e)}"}
-
-    # ── Étape 2 : Génération du prompt optimisé ───────────────────────────────
-    system_optimize = SystemMessage(content="""
+    # Étape 1 : Analyse
+    system_analyze = SystemMessage(content=f"""
 Tu es un expert senior en prompt engineering.
-Tu reçois un prompt original avec ses faiblesses identifiées.
-Ta mission : réécrire ce prompt pour le rendre professionnel, précis et efficace.
-
-Règles d'optimisation :
-1. Ajoute un rôle clair si manquant ("Tu es un expert en...")
-2. Enrichis le contexte avec les informations manquantes
-3. Rends la tâche précise et actionnable (étapes si complexe)
-4. Spécifie le format de sortie attendu
-5. Ajoute des contraintes pertinentes
-6. Garde la même intention que le prompt original
-
-Retourne UNIQUEMENT le prompt optimisé, sans explication, sans JSON, sans balises.
+{lang_instr}
+Analyse ce prompt et retourne UNIQUEMENT un JSON sur UNE SEULE LIGNE :
+{{"score_before": 0-100, "weaknesses": ["faiblesse 1", "faiblesse 2"], "missing_elements": ["element manquant"]}}
 """)
-
-    human_optimize = HumanMessage(content=f"""
-Prompt original : {prompt_to_optimize}
-
-Faiblesses identifiées : {', '.join(weaknesses)}
-Éléments manquants : {', '.join(missing_elements)}
-
-Génère le prompt optimisé et professionnel.
-""")
-
     try:
-        response_optimize = llm.invoke([system_optimize, human_optimize])
-        optimized_prompt = response_optimize.content.strip()
+        r1 = llm.invoke([system_analyze, HumanMessage(content=f"Prompt : {prompt_to_optimize}")])
+        a = json.loads(clean_json(r1.content.strip()))
+        score_before = a.get("score_before", 50)
+        weaknesses = a.get("weaknesses", [])
+        missing = a.get("missing_elements", [])
     except Exception as e:
-        return {**state, "error": f"Erreur optimize_prompt (optimisation): {str(e)}"}
+        return {**state, "error": f"Erreur optimize (analyse): {str(e)}"}
 
-    # ── Étape 3 : Score du prompt optimisé ───────────────────────────────────
-    system_score = SystemMessage(content="""
+    # Étape 2 : Optimisation
+    system_opt = SystemMessage(content=f"""
+Tu es un expert senior en prompt engineering.
+{lang_instr}
+Réécris ce prompt pour le rendre professionnel et efficace.
+Retourne UNIQUEMENT le prompt optimisé, sans explication.
+""")
+    try:
+        r2 = llm.invoke([system_opt, HumanMessage(content=f"Prompt original : {prompt_to_optimize}\nFaiblesses : {', '.join(weaknesses)}")])
+        optimized_prompt = r2.content.strip()
+    except Exception as e:
+        return {**state, "error": f"Erreur optimize (optimisation): {str(e)}"}
+
+    # Étape 3 : Score final
+    system_score = SystemMessage(content=f"""
 Tu es un expert en prompt engineering.
-Évalue ce prompt optimisé et retourne UNIQUEMENT un JSON sur UNE SEULE LIGNE avec :
-- score_after : score de qualité de 0 à 100
-- improvements : tableau de 3 à 5 améliorations apportées (phrases courtes)
-
-Ne mets RIEN avant ou après le JSON.
+{lang_instr}
+Évalue ce prompt optimisé et retourne UNIQUEMENT un JSON sur UNE SEULE LIGNE :
+{{"score_after": 0-100, "improvements": ["amélioration 1", "amélioration 2"]}}
 """)
-
-    human_score = HumanMessage(content=f"Prompt optimisé à évaluer : {optimized_prompt}")
-
     try:
-        response_score = llm.invoke([system_score, human_score])
-        text_score = clean_json(response_score.content.strip())
-        scoring = json.loads(text_score)
-        score_after = scoring.get("score_after", 85)
-        improvements = scoring.get("improvements", [])
-    except Exception as e:
-        # Si l'évaluation finale échoue, on met des valeurs par défaut
+        r3 = llm.invoke([system_score, HumanMessage(content=f"Prompt : {optimized_prompt}")])
+        s = json.loads(clean_json(r3.content.strip()))
+        score_after = s.get("score_after", 85)
+        improvements = s.get("improvements", [])
+    except:
         score_after = min(score_before + 30, 95)
-        improvements = ["Structure améliorée", "Contexte enrichi", "Format défini"]
+        improvements = ["Structure améliorée", "Contexte enrichi"]
 
     return {
         **state,
