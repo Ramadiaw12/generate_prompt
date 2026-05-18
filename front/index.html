@@ -584,7 +584,7 @@ svg#flow { display: block; width: 100%; overflow: visible; }
 
 <!-- ── Top Nav ── -->
 <nav class="topnav">
-  <div class="topnav-logo">PromptCraft <span>beta</span></div>
+  <a href="/" class="topnav-logo" style="text-decoration:none;color:inherit;cursor:pointer;">PromptCraft <span>beta</span></a>
   <div class="topnav-right">
     <div class="user-pill" id="user-pill">
       <div class="user-dot"></div>
@@ -1190,6 +1190,8 @@ function readGoogleToken() {
 
 readGoogleToken();
 updateUI();
+document.getElementById('user-input-field').value = '';
+document.getElementById('results-section').classList.remove('show');
 </script>
 </body>
 </html>
