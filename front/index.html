@@ -374,19 +374,6 @@ svg#flow{display:block;width:100%;overflow:visible;}
     </div>
     <div class="final-prompt-text" id="res-full-prompt"></div>
 
-    <!-- Éditeur de prompt -->
-    <div class="prompt-editor-wrap hidden" id="prompt-editor-wrap">
-      <div class="prompt-editor-actions">
-        <span class="editor-label">✏️ Mode édition</span>
-        <div class="editor-btns">
-          <button class="editor-btn reset-btn" onclick="resetPromptEdit()">↩ Annuler</button>
-          <button class="editor-btn save-btn" onclick="savePromptEdit()">✓ Valider</button>
-        </div>
-      </div>
-      <textarea class="prompt-textarea-edit" id="prompt-edit-area"></textarea>
-      <div class="prompt-edit-hint">Ctrl+Enter pour valider</div>
-    </div>
-
     <div class="ia-launchers">
       <div class="ia-launchers-title" id="lbl-ia-title">Ouvrir directement dans</div>
       <div class="ia-btns">
@@ -866,9 +853,10 @@ function logout() {
   document.getElementById('results-section').classList.remove('show');
   // Reset éditeur
   isEditing = false;
-  document.getElementById('prompt-editor-wrap')?.classList.add('hidden');
-  document.getElementById('res-full-prompt')?.classList.remove('editing');
-  if(document.getElementById('edit-btn')) document.getElementById('edit-btn').textContent = '✏️ Modifier';
+  const _d = document.getElementById('res-full-prompt');
+  if(_d){ _d.contentEditable='false'; _d.classList.remove('editable'); }
+  const _eb = document.getElementById('edit-btn');
+  if(_eb){ _eb.textContent='✏️ Modifier'; _eb.style.background='rgba(255,255,255,.08)'; _eb.style.borderColor='rgba(255,255,255,.2)'; }
   closeHistory(); updateUI();
 }
 
@@ -964,7 +952,9 @@ function renderResults(data) {
 }
 
 function copyPrompt() {
-  navigator.clipboard.writeText(document.getElementById('res-full-prompt').textContent).then(() => {
+  const promptEl = document.getElementById('res-full-prompt');
+  const text = promptEl.innerText || promptEl.textContent;
+  navigator.clipboard.writeText(text).then(() => {
     const btn = document.getElementById('copy-btn');
     btn.textContent = '✓'; btn.classList.add('copied');
     setTimeout(() => { btn.textContent = t('copy-btn'); btn.classList.remove('copied'); }, 2000);
