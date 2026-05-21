@@ -968,6 +968,41 @@ document.getElementById('user-input-field').addEventListener('keydown', e => {
 // ═══════════════════════════════════════
 // IA LAUNCHERS
 // ═══════════════════════════════════════
+
+// ═══════════════════════════════════════════════
+// PROMPT EDITOR
+// ═══════════════════════════════════════════════
+let isEditing = false;
+
+function toggleEdit() {
+  const display = document.getElementById('res-full-prompt');
+  const editBtn = document.getElementById('edit-btn');
+
+  if (!isEditing) {
+    display.contentEditable = 'true';
+    display.classList.add('editable');
+    display.focus();
+    const range = document.createRange();
+    const sel = window.getSelection();
+    range.selectNodeContents(display);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    editBtn.textContent = '✓ Terminer';
+    editBtn.style.background = 'rgba(39,111,76,.4)';
+    editBtn.style.borderColor = '#276f4c';
+    isEditing = true;
+  } else {
+    display.contentEditable = 'false';
+    display.classList.remove('editable');
+    editBtn.textContent = '✏️ Modifier';
+    editBtn.style.background = 'rgba(255,255,255,.08)';
+    editBtn.style.borderColor = 'rgba(255,255,255,.2)';
+    updateIALaunchers(display.textContent);
+    isEditing = false;
+  }
+}
+
 function updateIALaunchers(promptText) {
   if (!promptText) return;
   const encoded = encodeURIComponent(promptText);
