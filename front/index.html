@@ -367,9 +367,26 @@ svg#flow{display:block;width:100%;overflow:visible;}
   <div class="final-prompt-card">
     <div class="final-prompt-label">
       <span id="lbl-final-prompt">Prompt final — prêt à l'emploi</span>
-      <button class="copy-btn" id="copy-btn" onclick="copyPrompt()">Copier</button>
+      <div style="display:flex;gap:.5rem;align-items:center;">
+        <button class="copy-btn" id="edit-btn" onclick="toggleEdit()" style="background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.2)">✏️ Modifier</button>
+        <button class="copy-btn" id="copy-btn" onclick="copyPrompt()">Copier</button>
+      </div>
     </div>
     <div class="final-prompt-text" id="res-full-prompt"></div>
+
+    <!-- Éditeur de prompt -->
+    <div class="prompt-editor-wrap hidden" id="prompt-editor-wrap">
+      <div class="prompt-editor-actions">
+        <span class="editor-label">✏️ Mode édition</span>
+        <div class="editor-btns">
+          <button class="editor-btn reset-btn" onclick="resetPromptEdit()">↩ Annuler</button>
+          <button class="editor-btn save-btn" onclick="savePromptEdit()">✓ Valider</button>
+        </div>
+      </div>
+      <textarea class="prompt-textarea-edit" id="prompt-edit-area"></textarea>
+      <div class="prompt-edit-hint">Ctrl+Enter pour valider</div>
+    </div>
+
     <div class="ia-launchers">
       <div class="ia-launchers-title" id="lbl-ia-title">Ouvrir directement dans</div>
       <div class="ia-btns">
@@ -847,6 +864,11 @@ function logout() {
   authToken = null; userEmail = null;
   localStorage.removeItem('auth_token'); localStorage.removeItem('user_email');
   document.getElementById('results-section').classList.remove('show');
+  // Reset éditeur
+  isEditing = false;
+  document.getElementById('prompt-editor-wrap')?.classList.add('hidden');
+  document.getElementById('res-full-prompt')?.classList.remove('editing');
+  if(document.getElementById('edit-btn')) document.getElementById('edit-btn').textContent = '✏️ Modifier';
   closeHistory(); updateUI();
 }
 
@@ -1035,5 +1057,21 @@ updateUI();
 document.getElementById('user-input-field').value = '';
 document.getElementById('results-section').classList.remove('show');
 </script>
+
+<!-- ── Footer ── -->
+<footer class="site-footer">
+  <div class="footer-left">
+    <div class="footer-avatar">RD</div>
+    <span class="footer-name">Créé par <strong>Ramatoulaye Diawane</strong> · PromptCraft © 2026</span>
+  </div>
+  <div class="footer-right">
+    <a href="https://github.com/Ramadiaw12/generate_prompt" class="footer-link" target="_blank" rel="noopener">GitHub</a>
+    <span class="footer-sep">·</span>
+    <a href="https://prompt-craft26.netlify.app" class="footer-link" target="_blank" rel="noopener">App</a>
+    <span class="footer-sep">·</span>
+    <a href="mailto:contact@promptcraft.today" class="footer-link">Contact</a>
+  </div>
+</footer>
+
 </body>
 </html>
