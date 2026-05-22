@@ -1046,10 +1046,6 @@ document.getElementById('user-input-field').addEventListener('keydown', e => {
   if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) generatePrompt();
 });
 
-// ═══════════════════════════════════════
-// IA LAUNCHERS
-// ═══════════════════════════════════════
-
 // ═══════════════════════════════════════════════
 // PROMPT EDITOR
 // ═══════════════════════════════════════════════
@@ -1088,36 +1084,17 @@ function updateIALaunchers(promptText) {
   if (!promptText) return;
   const encoded = encodeURIComponent(promptText);
   const launchers = {
-    // Pré-remplissage natif via ?q=
-    chatgpt:    `https://chatgpt.com/?q=${encoded}`,
-    claude:     `https://claude.ai/new?q=${encoded}`,
-    perplexity: `https://www.perplexity.ai/?q=${encoded}`,
-    mistral:    `https://chat.mistral.ai/chat?q=${encoded}`,
-    // Gemini : ?prompt= fonctionne avec leur nouvelle URL
-    gemini:     `https://gemini.google.com/app?prompt=${encoded}`,
-    // DeepSeek : copie dans le presse-papier et ouvre le chat
-    deepseek:   `https://chat.deepseek.com/`,
+    chatgpt:    'https://chatgpt.com/?q='        + encoded,
+    claude:     'https://claude.ai/new?q='       + encoded,
+    perplexity: 'https://www.perplexity.ai/?q='  + encoded,
+    mistral:    'https://chat.mistral.ai/chat?q=' + encoded,
+    gemini:     '/relay.html?target=gemini&prompt='   + encoded,
+    deepseek:   '/relay.html?target=deepseek&prompt=' + encoded,
   };
   Object.entries(launchers).forEach(([ia, url]) => {
-    const btn = document.getElementById('btn-'+ia);
-    if (btn) btn.href = url;
+    const btn = document.getElementById('btn-' + ia);
+    if (btn) { btn.href = url; btn.onclick = null; }
   });
-
-  // DeepSeek : copie le prompt auto au clic
-  const dsBtn = document.getElementById('btn-deepseek');
-  if (dsBtn) {
-    dsBtn.onclick = (e) => {
-      e.preventDefault();
-      navigator.clipboard.writeText(promptText).then(() => {
-        // Ouvre DeepSeek après avoir copié
-        window.open('https://chat.deepseek.com/', '_blank');
-        // Feedback visuel
-        const prev = dsBtn.innerHTML;
-        dsBtn.innerHTML = dsBtn.innerHTML.replace('DeepSeek', '✓ Copié!');
-        setTimeout(() => { dsBtn.innerHTML = prev; }, 2000);
-      });
-    };
-  }
 }
 
 // ═══════════════════════════════════════
