@@ -302,6 +302,42 @@ async def my_prompts(
         ]
     }
 
+
+import httpx
+
+class GeminiRequest(BaseModel):
+    prompt: str
+
+@app.post("/ask-gemini")
+@limiter.limit("10/minute")
+async def ask_gemini(
+    request: Request,
+    body: GeminiRequest,
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Appelle l'API Gemini avec le prompt généré.
+    La clé API reste côté serveur — jamais exposée au frontend.
+    """
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    if not gemini_key:
+        raise HTTPException(status_code=503, detail="Gemini non configuré.")
+
+    if not body.prompt.strip():
+        raise HTTPException(status_code=422, detail="Prompt vide.")
+
+    try:
+        async with httpx.AsyncClient(timeout=30) as client:
+            res = await client.post(
+                f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={gemini_key}",
+                json={"contents": [{"parts": [{"text": body.prompt}]}]}
+            )
+            data = res.json()
+            text = data["candidates"][0]["content"]["parts"][0]["text"]
+            return {"response": text}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur Gemini : {str(e)}")
+
 # ── Route : Infos plan utilisateur ───────────────────────────────────────────
 
 @app.get("/my-plan")

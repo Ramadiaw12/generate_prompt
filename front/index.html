@@ -255,7 +255,60 @@ svg#flow{display:block;width:100%;overflow:visible;}
 [dir="rtl"] header{direction:rtl;}
 [dir="rtl"] .auth-top{direction:rtl;}
 
-/* Responsive */
+
+/* ── Gemini Response ── */
+.gemini-section {
+  display: none; margin-top: 1.2rem;
+  border-top: 1px solid rgba(255,255,255,.1);
+  padding-top: 1rem;
+}
+.gemini-section.show { display: block; }
+.gemini-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: .8rem;
+}
+.gemini-label {
+  font-family: 'DM Mono', monospace; font-size: .6rem;
+  letter-spacing: .16em; text-transform: uppercase;
+  color: #4285f4; display: flex; align-items: center; gap: .5rem;
+}
+.gemini-label svg { width: 14px; height: 14px; }
+.gemini-loading {
+  display: flex; align-items: center; gap: .5rem;
+  font-family: 'DM Mono', monospace; font-size: .75rem;
+  color: rgba(255,255,255,.4);
+}
+.gemini-spinner {
+  width: 14px; height: 14px;
+  border: 2px solid rgba(255,255,255,.15);
+  border-top-color: #4285f4;
+  border-radius: 50%; animation: spin .7s linear infinite;
+}
+.gemini-response {
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: .85rem; line-height: 1.75;
+  color: rgba(255,255,255,.85);
+  white-space: pre-wrap; max-height: 400px; overflow-y: auto;
+  padding-right: .5rem;
+}
+.gemini-response::-webkit-scrollbar { width: 4px; }
+.gemini-response::-webkit-scrollbar-thumb { background: rgba(255,255,255,.15); border-radius: 2px; }
+.gemini-close {
+  font-family: 'DM Mono', monospace; font-size: .6rem;
+  background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.15);
+  color: rgba(255,255,255,.5); border-radius: 100px;
+  padding: .25em .7em; cursor: pointer; transition: all .18s;
+}
+.gemini-close:hover { background: rgba(255,255,255,.15); color: #fff; }
+.gemini-ask-btn {
+  display: inline-flex; align-items: center; gap: .4rem;
+  font-family: 'Instrument Sans', sans-serif; font-size: .78rem; font-weight: 600;
+  padding: .5em 1.1em; border-radius: 100px;
+  border: 1.5px solid #4285f4;
+  background: rgba(66,133,244,.15); color: #7ab3ff;
+  cursor: pointer; text-decoration: none; transition: all .2s;
+}
+.gemini-ask-btn:hover { background: rgba(66,133,244,.3); color: #fff; transform: translateY(-1px); }
 @media(max-width:768px){
   .topnav{padding:.8rem 1.2rem;}
   .topnav-right .btn,.topnav-right .user-pill,
@@ -460,10 +513,26 @@ svg#flow{display:block;width:100%;overflow:visible;}
       <div class="ia-btns">
         <a class="ia-btn chatgpt" id="btn-chatgpt" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="#10a37f"><path d="M22.28 9.6a5.85 5.85 0 00-.52-4.84 6.05 6.05 0 00-6.5-2.9A5.85 5.85 0 0011.1.5a6.05 6.05 0 00-5.77 4.19 5.85 5.85 0 00-3.91 2.84 6.05 6.05 0 00.75 7.1 5.85 5.85 0 00.52 4.84 6.05 6.05 0 006.5 2.9 5.85 5.85 0 004.16 1.86 6.05 6.05 0 005.77-4.19 5.85 5.85 0 003.91-2.84 6.05 6.05 0 00-.75-7.1z"/></svg>ChatGPT</a>
         <a class="ia-btn claude" id="btn-claude" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="#cc8844"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" fill="white" font-size="10" font-weight="bold">C</text></svg>Claude</a>
-        <a class="ia-btn gemini" id="btn-gemini" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="#4285f4"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>Gemini</a>
+        <button class="ia-btn gemini" id="btn-gemini" onclick="askGemini()"><svg viewBox="0 0 24 24" fill="#4285f4"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>Gemini ✨</button>
         <a class="ia-btn deepseek" id="btn-deepseek" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="#6366f1"><circle cx="12" cy="12" r="10"/><text x="12" y="16" text-anchor="middle" fill="white" font-size="8" font-weight="bold">DS</text></svg>DeepSeek</a>
         <a class="ia-btn perplexity" id="btn-perplexity" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="#20b2aa"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5"/></svg>Perplexity</a>
         <a class="ia-btn mistral" id="btn-mistral" href="#" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="#ff6a00"><path d="M12 2l3 7h7l-5.5 4 2 7L12 16l-6.5 4 2-7L2 9h7z"/></svg>Mistral</a>
+      </div>
+
+      <!-- Gemini direct response -->
+      <div class="gemini-section" id="gemini-section">
+        <div class="gemini-header">
+          <div class="gemini-label">
+            <svg viewBox="0 0 24 24" fill="#4285f4"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            Réponse Gemini
+          </div>
+          <button class="gemini-close" onclick="closeGemini()">✕ Fermer</button>
+        </div>
+        <div id="gemini-loading" class="gemini-loading" style="display:none">
+          <div class="gemini-spinner"></div>
+          Gemini réfléchit...
+        </div>
+        <div class="gemini-response" id="gemini-response"></div>
       </div>
     </div>
   </div>
@@ -1025,6 +1094,7 @@ function renderResults(data) {
   document.getElementById('res-output-format').textContent = data.output_format || '';
   document.getElementById('res-constraints').textContent   = data.constraints || '';
   document.getElementById('res-full-prompt').textContent   = data.full_prompt || '';
+  currentPromptText = data.full_prompt || '';
   const copyBtn = document.getElementById('copy-btn');
   copyBtn.textContent = t('copy-btn'); copyBtn.classList.remove('copied');
   document.getElementById('results-section').classList.add('show');
@@ -1076,6 +1146,7 @@ function toggleEdit() {
     editBtn.style.background = 'rgba(255,255,255,.08)';
     editBtn.style.borderColor = 'rgba(255,255,255,.2)';
     updateIALaunchers(display.textContent);
+    currentPromptText = display.textContent;
     isEditing = false;
   }
 }
@@ -1119,6 +1190,63 @@ function updateIALaunchers(promptText) {
       }, 800);
     }).catch(() => window.open('https://chat.deepseek.com/', '_blank'));
   };
+}
+
+
+// ═══════════════════════════════════════════════
+// GEMINI API — réponse directe dans la page
+// ═══════════════════════════════════════════════
+let currentPromptText = '';
+
+async function askGemini() {
+  if (!currentPromptText) return;
+
+  const section  = document.getElementById('gemini-section');
+  const loading  = document.getElementById('gemini-loading');
+  const response = document.getElementById('gemini-response');
+
+  // Affiche la section et le loader
+  section.classList.add('show');
+  loading.style.display  = 'flex';
+  response.textContent   = '';
+  section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  try {
+    const res = await fetch(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=' + GEMINI_KEY,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: currentPromptText }] }]
+        })
+      }
+    );
+
+    const data = await res.json();
+
+    if (data.candidates && data.candidates[0]) {
+      const text = data.candidates[0].content.parts[0].text;
+      loading.style.display = 'none';
+      // Affichage progressif lettre par lettre
+      let i = 0;
+      const interval = setInterval(() => {
+        response.textContent += text[i] || '';
+        i++;
+        if (i >= text.length) clearInterval(interval);
+      }, 8);
+    } else {
+      throw new Error('Pas de réponse Gemini');
+    }
+  } catch(err) {
+    loading.style.display = 'none';
+    response.textContent = '❌ Erreur : ' + err.message;
+  }
+}
+
+function closeGemini() {
+  document.getElementById('gemini-section').classList.remove('show');
+  document.getElementById('gemini-response').textContent = '';
 }
 
 // ═══════════════════════════════════════
