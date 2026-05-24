@@ -472,6 +472,35 @@ svg#flow{display:block;width:100%;overflow:visible;}
   font-size: .75rem; line-height: 1;
   pointer-events: none;
 }
+
+[data-theme="dark"] .mode-btn.active {
+  background: var(--amber);
+  color: #fff !important;
+  border-color: var(--amber);
+}
+[data-theme="dark"] .mode-btn {
+  color: var(--muted);
+  background: var(--card);
+  border-color: var(--border);
+}
+[data-theme="dark"] .mode-btn:hover {
+  color: var(--ink);
+  border-color: var(--ink);
+}
+[data-theme="dark"] .mode-btn.pro-mode {
+  color: var(--amber);
+  border-color: var(--amber);
+}
+[data-theme="dark"] .lang-btn {
+  color: var(--muted);
+}
+[data-theme="dark"] .lang-btn.active {
+  background: var(--amber);
+  color: #fff !important;
+}
+[data-theme="dark"] .gen-hint {
+  color: var(--muted);
+}
 </style>
 </head>
 <body>
