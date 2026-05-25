@@ -590,6 +590,52 @@ svg#flow{display:block;width:100%;overflow:visible;}
 [data-theme="dark"] .auth-divider {
   color: var(--muted) !important;
 }
+
+/* ── Fix mobile dark mode ── */
+[data-theme="dark"] .mobile-menu {
+  background: rgba(13,11,9,.97) !important;
+}
+[data-theme="dark"] .mob-btn-amber {
+  background: var(--amber) !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .mob-btn-ghost {
+  color: #f0ece4 !important;
+  border-color: #2a2620 !important;
+}
+[data-theme="dark"] .mob-btn-rose {
+  color: var(--rose) !important;
+  border-color: var(--rose) !important;
+}
+[data-theme="dark"] .mob-btn-history {
+  background: var(--amber) !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .mob-user-pill {
+  background: #1a1814 !important;
+  border-color: #2a2620 !important;
+  color: #f0ece4 !important;
+}
+[data-theme="dark"] #history-overlay {
+  background: rgba(0,0,0,.6) !important;
+}
+[data-theme="dark"] #history-sidebar {
+  background: #1a1814 !important;
+}
+[data-theme="dark"] .history-title {
+  color: #f0ece4 !important;
+}
+[data-theme="dark"] .history-item-input {
+  color: #f0ece4 !important;
+}
+[data-theme="dark"] .history-close {
+  background: #2a2620 !important;
+  color: var(--muted) !important;
+}
+[data-theme="dark"] .history-close:hover {
+  background: var(--amber) !important;
+  color: #fff !important;
+}
 </style>
 </head>
 <body>
@@ -620,6 +666,7 @@ svg#flow{display:block;width:100%;overflow:visible;}
 
 <!-- MOBILE MENU -->
 <div class="mobile-menu" id="mobile-menu">
+  <button onclick="closeMobileMenu()" style="position:absolute;top:1.2rem;right:1.2rem;width:36px;height:36px;border-radius:50%;background:rgba(26,22,18,.1);border:1px solid var(--border);cursor:pointer;font-size:1.1rem;color:var(--muted);display:flex;align-items:center;justify-content:center;transition:all .18s;" onmouseover="this.style.background='var(--amber)';this.style.color='#fff'" onmouseout="this.style.background='rgba(26,22,18,.1)';this.style.color='var(--muted)'">✕</button>
   <div class="mob-user-pill" id="mob-user-pill" style="display:none">
     <div class="mob-dot"></div><span id="mob-email-display"></span>
   </div>
