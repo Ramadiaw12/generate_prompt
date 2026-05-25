@@ -83,7 +83,8 @@ PromptCraft structures your request into a professional prompt :
 | 4️⃣ | Agent refines into final prompt | fluent, professional, ready to use |
 | 5️⃣ | Copy & paste into any AI | ChatGPT · Claude · Gemini · Mistral |
 
-🌍 **Try it live :** [promptcraft.today](https://promptcraft.today)
+🌍 **Try it live :** 
+![Demo PromptCraft](demo.gif)
 
 ---
 
