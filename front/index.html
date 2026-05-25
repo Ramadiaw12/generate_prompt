@@ -533,6 +533,63 @@ svg#flow{display:block;width:100%;overflow:visible;}
   color: var(--ink);
   border-color: var(--ink);
 }
+
+/* ── Fix texte prompt final dark mode ── */
+[data-theme="dark"] .final-prompt-card {
+  background: #0d0b09 !important;
+}
+[data-theme="dark"] .final-prompt-text {
+  color: rgba(255,255,255,.9) !important;
+}
+[data-theme="dark"] .final-prompt-label {
+  color: var(--amber) !important;
+}
+
+/* ── Fix modal connexion dark mode ── */
+[data-theme="dark"] .auth-title {
+  color: #f0ece4 !important;
+}
+[data-theme="dark"] .auth-sub {
+  color: var(--muted) !important;
+}
+[data-theme="dark"] .auth-tab {
+  color: var(--muted) !important;
+}
+[data-theme="dark"] .auth-tab.active {
+  background: var(--amber) !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .auth-pill {
+  background: #111010 !important;
+  border-color: #2a2620 !important;
+}
+[data-theme="dark"] .field label {
+  color: var(--muted) !important;
+}
+[data-theme="dark"] .field input {
+  background: #111010 !important;
+  color: #f0ece4 !important;
+  border-color: #2a2620 !important;
+}
+[data-theme="dark"] .field input::placeholder {
+  color: #4a4540 !important;
+}
+[data-theme="dark"] .auth-close {
+  background: #2a2620 !important;
+  color: var(--muted) !important;
+}
+[data-theme="dark"] .auth-close:hover {
+  background: var(--amber) !important;
+  color: #fff !important;
+}
+[data-theme="dark"] .btn-google {
+  background: #111010 !important;
+  border-color: #2a2620 !important;
+  color: #f0ece4 !important;
+}
+[data-theme="dark"] .auth-divider {
+  color: var(--muted) !important;
+}
 </style>
 </head>
 <body>
