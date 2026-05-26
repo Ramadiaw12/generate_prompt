@@ -137,7 +137,10 @@ async def generate_prompt(
     Disponible pour tous les utilisateurs (Free + Pro).
     🔒 JWT requis · ⏱️ 10 req/min par IP
     """
-    if not body.user_input.strip():
+    # Nettoyage basique anti-XSS
+    import html
+    body.user_input = html.escape(body.user_input.strip())
+    if not body.user_input:
         raise HTTPException(status_code=422, detail="Le champ user_input ne peut pas être vide.")
     if graph is None:
         raise HTTPException(status_code=503, detail="Agent non initialisé.")
