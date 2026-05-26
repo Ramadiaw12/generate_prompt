@@ -1294,7 +1294,31 @@ async function loadHistory() {
       const date = new Date(p.created_at).toLocaleDateString('fr-FR', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
       const item = document.createElement('div');
       item.className = 'history-item';
-      item.innerHTML = `<div class="history-item-domain">${p.domain||'autre'}</div><div class="history-item-input">${p.user_input}</div><div class="history-item-meta"><span class="history-item-date">${date}</span><span class="history-item-badge">${p.complexity||'medium'}</span></div>`;
+      // Fix XSS : utilise textContent au lieu de innerHTML
+      const domain = document.createElement('div');
+      domain.className = 'history-item-domain';
+      domain.textContent = p.domain || 'autre';
+
+      const input = document.createElement('div');
+      input.className = 'history-item-input';
+      input.textContent = p.user_input;
+
+      const meta = document.createElement('div');
+      meta.className = 'history-item-meta';
+
+      const dateSpan = document.createElement('span');
+      dateSpan.className = 'history-item-date';
+      dateSpan.textContent = date;
+
+      const badge = document.createElement('span');
+      badge.className = 'history-item-badge';
+      badge.textContent = p.complexity || 'medium';
+
+      meta.appendChild(dateSpan);
+      meta.appendChild(badge);
+      item.appendChild(domain);
+      item.appendChild(input);
+      item.appendChild(meta);
       item.addEventListener('click', () => {
         closeHistory();
         renderResults({intent:'',domain:p.domain||'',complexity:p.complexity||'',role:'',context:'',task:'',output_format:'',constraints:'',full_prompt:p.full_prompt||''});
