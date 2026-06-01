@@ -21,7 +21,7 @@ from IPython.display import Markdown
 router = APIRouter(prefix="/prompt", tags=["prompt"])
 
 
-# ── Génération ────────────────────────────────────────────────────────────────
+# Génération 
 
 @router.post("/generate", response_model=PromptResponse)
 async def generate_prompt(
@@ -36,7 +36,7 @@ async def generate_prompt(
     if not body.user_input.strip():
         raise HTTPException(status_code=400, detail="La saisie ne peut pas être vide")
 
-    # ── Exécution du graphe ───────────────────────────────────────────────────
+    # Exécution du graphe 
     initial_state = {
         "user_input": body.user_input,
         "intent": None,
@@ -56,7 +56,7 @@ async def generate_prompt(
     if final_state.get("error"):
         raise HTTPException(status_code=500, detail=final_state["error"])
 
-    # ── Sauvegarde en base ────────────────────────────────────────────────────
+    #  Sauvegarde en base 
     history = PromptHistory(
         user_id=current_user.id,
         raw_input=body.user_input,
@@ -71,7 +71,7 @@ async def generate_prompt(
     session.commit()
     session.refresh(history)
 
-    # ── Réponse ───────────────────────────────────────────────────────────────
+    # Réponse 
     return PromptResponse(
         sections=PromptSection(
             role=final_state.get("role", ""),
@@ -85,7 +85,7 @@ async def generate_prompt(
     )
 
 
-# ── Historique ────────────────────────────────────────────────────────────────
+# Historique 
 
 @router.get("/history", response_model=List[HistoryItemOut])
 async def get_history(

@@ -21,7 +21,7 @@ llm = ChatGroq(
     temperature=0,
 )
 
-# ── Langue → instructions ─────────────────────────────────────────────────────
+# Langue → instructions 
 LANG_INSTRUCTIONS = {
     "fr": "Réponds UNIQUEMENT en français. Génère le prompt final en français.",
     "en": "Respond ONLY in English. Generate the final prompt in English.",
@@ -31,7 +31,7 @@ LANG_INSTRUCTIONS = {
 def get_lang_instruction(lang: str) -> str:
     return LANG_INSTRUCTIONS.get(lang, LANG_INSTRUCTIONS["fr"])
 
-# ── Helper JSON ───────────────────────────────────────────────────────────────
+# Helper JSON 
 def clean_json(text: str) -> str:
     text = re.sub(r"```json|```", "", text).strip()
     # Remplace les sauts de ligne dans les valeurs JSON
@@ -95,7 +95,7 @@ def structure_prompt(state: AgentState) -> AgentState:
     lang = state.get("lang", "fr")
     lang_instr = get_lang_instruction(lang)
 
-    # ── Mode CONCIS : prompt court, économe en tokens ─────────────────────────
+    #  Mode CONCIS : prompt court, économe en tokens 
     if mode == "concis":
         system = SystemMessage(content=f"""
 Tu es un expert en prompt engineering.
@@ -108,7 +108,7 @@ Retourne UNIQUEMENT un JSON valide sur UNE SEULE LIGNE :
 {{"role": "rôle en 1 phrase max", "context": "", "task": "tâche en 1 phrase directe", "output_format": "format en quelques mots", "constraints": "1-2 contraintes max"}}
 """)
 
-    # ── Mode EXPERT : prompt ultra-détaillé avec exemples ────────────────────
+    # Mode EXPERT : prompt ultra-détaillé avec exemples 
     elif mode == "expert":
         system = SystemMessage(content=f"""
 Tu es un expert senior en prompt engineering.
@@ -125,7 +125,7 @@ Retourne UNIQUEMENT un JSON valide sur UNE SEULE LIGNE :
 {{"role": "rôle expert détaillé", "context": "contexte riche et complet", "task": "tâche décomposée en étapes", "output_format": "format précis avec structure", "constraints": "contraintes strictes + exemples"}}
 """)
 
-    # ── Mode COMPLET (défaut) : 5 sections équilibrées ───────────────────────
+    # Mode COMPLET (défaut) : 5 sections équilibrées
     else:
         system = SystemMessage(content=f"""
 Tu es un expert en prompt engineering.

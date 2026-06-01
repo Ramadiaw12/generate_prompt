@@ -4,7 +4,7 @@
 # Auteur  : DIAWANE Ramatoulaye
 # =============================================================================
 
-# ── Imports ──────────────────────────────────────────────────────────────────
+# Imports 
 
 import os                          # pour lire les variables d'environnement
 from dotenv import load_dotenv     # pour charger le fichier .env
@@ -22,13 +22,13 @@ from sqlalchemy.orm import sessionmaker, Session
 from typing import Generator
 # Generator : type Python pour les fonctions qui utilisent "yield"
 
-# ── Chargement des variables d'environnement ─────────────────────────────────
+# Chargement des variables d'environnement 
 
 load_dotenv("../.env")
 # On charge le fichier .env AVANT de lire DATABASE_URL
 # Sans ça, os.getenv retournerait None
 
-# ── URL de connexion à PostgreSQL ─────────────────────────────────────────────
+# URL de connexion à PostgreSQL 
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 # On lit DATABASE_URL depuis le .env
@@ -44,7 +44,7 @@ if not DATABASE_URL:
         "Format : postgresql://user:password@host:port/dbname"
     )
 
-# ── Création du moteur SQLAlchemy ─────────────────────────────────────────────
+# Création du moteur SQLAlchemy 
 
 engine = create_engine(
     DATABASE_URL,
@@ -65,13 +65,13 @@ engine = create_engine(
     echo=False,
 )
 
-# ── Classe de base pour les modèles ──────────────────────────────────────────
+# ── Classe de base pour les modèles 
 
 Base = declarative_base()
 # Toutes nos tables (User, PromptHistory...) vont hériter de cette classe
 # C'est ce qui permet à SQLAlchemy de les "connaître" et de les créer
 
-# ── Fabrique de sessions ──────────────────────────────────────────────────────
+# Fabrique de sessions 
 
 SessionLocal = sessionmaker(
     bind=engine,        # on associe la session à notre moteur PostgreSQL
@@ -81,7 +81,7 @@ SessionLocal = sessionmaker(
 # SessionLocal est une "classe" qu'on instancie pour ouvrir une session
 # Exemple : db = SessionLocal() → ouvre une connexion à PostgreSQL
 
-# ── Fonction de création des tables ──────────────────────────────────────────
+# Fonction de création des tables 
 
 def create_tables():
     """
@@ -96,7 +96,7 @@ def create_tables():
     Base.metadata.create_all(bind=engine)
     print("✅ Tables PostgreSQL créées / vérifiées.")
 
-# ── Dépendance FastAPI — session par requête ──────────────────────────────────
+# Dépendance FastAPI — session par requête 
 
 def get_db() -> Generator[Session, None, None]:
     """

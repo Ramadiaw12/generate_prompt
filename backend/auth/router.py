@@ -32,13 +32,13 @@ from starlette.config import Config
 from db.database import get_db
 from models.schemas import User
 
-# ── Configuration JWT ─────────────────────────────────────────────────────────
+# Configuration JWT 
 
 SECRET_KEY = os.getenv("SECRET_KEY", "changez-moi-en-production")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 jours
 
-# ── Configuration Google OAuth ────────────────────────────────────────────────
+# Configuration Google OAuth 
 
 GOOGLE_CLIENT_ID     = os.getenv("GOOGLE_CLIENT_ID")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
@@ -64,7 +64,7 @@ oauth.register(
     },
 )
 
-# ── Initialisation ────────────────────────────────────────────────────────────
+# Initialisation 
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -75,7 +75,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login", auto_error=False)
 # auto_error=False : ne pas lever d'erreur si pas de token
 # (certaines routes acceptent les deux : token JWT ou Google)
 
-# ── Schémas Pydantic ──────────────────────────────────────────────────────────
+# Schémas Pydantic 
 
 class UserRegister(BaseModel):
     """Données reçues lors de l'inscription classique."""
@@ -99,7 +99,7 @@ class UserOut(BaseModel):
     class Config:
         from_attributes = True
 
-# ── Fonctions utilitaires ─────────────────────────────────────────────────────
+# Fonctions utilitaires 
 
 def hash_password(password: str) -> str:
     """Hash un mot de passe avec Argon2. Irréversible."""
@@ -150,7 +150,7 @@ def get_or_create_google_user(db: Session, email: str, name: str, picture: str) 
     db.refresh(new_user)
     return new_user
 
-# ── Dépendance : user connecté ────────────────────────────────────────────────
+# Dépendance : user connecté 
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
@@ -183,7 +183,7 @@ async def get_current_user(
 
     return user
 
-# ── ROUTES CLASSIQUES ─────────────────────────────────────────────────────────
+# ROUTES CLASSIQUES 
 
 @router.post("/register", status_code=201)
 async def register(body: UserRegister, db: Session = Depends(get_db)):
@@ -244,7 +244,7 @@ async def me(current_user: User = Depends(get_current_user)):
     """
     return current_user
 
-# ── ROUTES GOOGLE OAUTH ───────────────────────────────────────────────────────
+# ROUTES GOOGLE OAUTH 
 
 @router.get("/google/login")
 async def google_login(request: Request):

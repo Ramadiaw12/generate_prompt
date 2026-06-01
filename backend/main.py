@@ -31,10 +31,10 @@ from auth.router import router as auth_router, get_current_user
 from db.database import get_db, create_tables
 from models.schemas import PromptHistory, User
 
-# ── Rate Limiter ──────────────────────────────────────────────────────────────
+# Rate Limiter 
 limiter = Limiter(key_func=get_remote_address)
 
-# ── Lifespan ──────────────────────────────────────────────────────────────────
+# Lifespan 
 graph = None
 
 @asynccontextmanager
@@ -47,7 +47,7 @@ async def lifespan(app: FastAPI):
     yield
     print("🛑 Arrêt du serveur.")
 
-# ── App ───────────────────────────────────────────────────────────────────────
+#  App 
 app = FastAPI(
     title="PromptCraft API",
     description="Génère et optimise des prompts via un pipeline LangGraph.",
@@ -72,7 +72,7 @@ app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.include_router(auth_router)
 
-# ── Schémas ───────────────────────────────────────────────────────────────────
+#  Schémas 
 
 class PromptRequest(BaseModel):
     """Données pour générer un prompt."""
@@ -110,7 +110,7 @@ class OptimizeResponse(BaseModel):
     improvements:      List[str]    # améliorations apportées
     optimized_prompt:  str          # prompt amélioré prêt à l'emploi
 
-# ── Routes publiques ──────────────────────────────────────────────────────────
+#  Routes publiques 
 
 @app.get("/")
 @limiter.limit("30/minute")
@@ -122,7 +122,7 @@ def root(request: Request):
 def health(request: Request):
     return {"status": "healthy", "graph_ready": graph is not None, "database": "postgresql"}
 
-# ── Route : Génération de prompt (Free + Pro) ─────────────────────────────────
+#  Route : Génération de prompt (Free + Pro) 
 
 @app.post("/generate-prompt", response_model=PromptResponse)
 @limiter.limit("10/minute")
@@ -199,7 +199,7 @@ async def generate_prompt(
         full_prompt=final_state.get("full_prompt", ""),
     )
 
-# ── Route : Optimisation de prompt (PRO uniquement) ───────────────────────────
+#  Route : Optimisation de prompt (PRO uniquement)
 
 @app.post("/optimize-prompt", response_model=OptimizeResponse)
 @limiter.limit("5/minute")
@@ -270,7 +270,7 @@ async def optimize_prompt_route(
         optimized_prompt=result_state.get("optimized_prompt", ""),
     )
 
-# ── Route : Historique des prompts ───────────────────────────────────────────
+# Route : Historique des prompts 
 
 @app.get("/my-prompts")
 @limiter.limit("20/minute")
@@ -341,7 +341,7 @@ async def ask_gemini(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur Gemini : {str(e)}")
 
-# ── Route : Infos plan utilisateur ───────────────────────────────────────────
+# Route : Infos plan utilisateur 
 
 @app.get("/my-plan")
 @limiter.limit("30/minute")

@@ -310,21 +310,20 @@ docker compose down
 ```bash
 # .env.example
 
-# ── PostgreSQL ───────────────────────────────────────
-POSTGRES_DB=promptcraft
-POSTGRES_USER=promptuser
-POSTGRES_PASSWORD=your-strong-password
+#  PostgreSQL 
+POSTGRES_DB=....
+POSTGRES_USER=....
+POSTGRES_PASSWORD=yourstrongpassword
 
 # Local without Docker
-DATABASE_URL=postgresql://promptuser:password@localhost:5432/promptcraft
+DATABASE_URL=....localhost/promptcraft
 # With Docker ("db" = Docker service name)
-# DATABASE_URL=postgresql://promptuser:password@db:5432/promptcraft
 
-# ── JWT ─────────────────────────────────────────────
+# ── JWT 
 # Generate with: openssl rand -hex 32
 SECRET_KEY=your-secret-key-here
 
-# ── Groq API ────────────────────────────────────────
+#  Groq API 
 GROQ_API_KEY=gsk_...
 ```
 
@@ -585,7 +584,7 @@ git push origin feat/your-feature-name
 
 ### 🌍 Try PromptCraft now
 
-**[promptcraft.today](https://promptcraft.today)**
+**[promptcraft.today](https://prompt-craft26.netlify.app/)**
 
 *Transform your ideas into perfect prompts in 3 seconds.*
 

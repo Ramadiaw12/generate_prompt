@@ -17,7 +17,7 @@ version: "3.9"
 services:
 # "services" = liste de tous les conteneurs à lancer
 
-  # ── SERVICE 1 : Base de données PostgreSQL ──────────────────────────────────
+  # SERVICE 1 : Base de données PostgreSQL 
   db:
     image: postgres:16-alpine
     # On utilise l'image officielle PostgreSQL 16
@@ -69,7 +69,7 @@ services:
       # Réseau interne Docker — seuls les services sur ce réseau
       # peuvent communiquer entre eux
 
-  # ── SERVICE 2 : Backend FastAPI ─────────────────────────────────────────────
+  #  SERVICE 2 : Backend FastAPI 
   backend:
     build:
       context: .
@@ -113,7 +113,7 @@ services:
     networks:
       - promptcraft_network
 
-  # ── SERVICE 3 : Frontend Nginx ──────────────────────────────────────────────
+  #  SERVICE 3 : Frontend Nginx 
   frontend:
     image: nginx:alpine
     # Nginx = serveur web ultra-performant pour servir les fichiers statiques
@@ -144,7 +144,7 @@ services:
     networks:
       - promptcraft_network
 
-# ── Volumes persistants ───────────────────────────────────────────────────────
+#  Volumes persistants 
 volumes:
   postgres_data:
     # Volume nommé pour les données PostgreSQL
@@ -152,7 +152,7 @@ volumes:
     # Survit aux "docker-compose down" et "docker-compose up"
     # Supprimé uniquement avec "docker-compose down -v"
 
-# ── Réseau interne ────────────────────────────────────────────────────────────
+#  Réseau interne 
 networks:
   promptcraft_network:
     driver: bridge

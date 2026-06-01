@@ -19,15 +19,15 @@ def build_graph() -> StateGraph:
     """
     graph = StateGraph(AgentState)
 
-    # ── Enregistrement des nodes ──────────────────────────────────────────────
+    # Enregistrement des nodes 
     graph.add_node("analyze_input", analyze_input)
     graph.add_node("structure_prompt", structure_prompt)
     graph.add_node("refine_output", refine_output)
 
-    # ── Point d'entrée ────────────────────────────────────────────────────────
+    # Point d'entrée
     graph.set_entry_point("analyze_input")
 
-    # ── Edges conditionnels ───────────────────────────────────────────────────
+    # Edges conditionnels 
     graph.add_conditional_edges(
         "analyze_input",
         has_error,
@@ -39,7 +39,7 @@ def build_graph() -> StateGraph:
         {"error": END, "continue": "refine_output"},
     )
 
-    # ── Fin ───────────────────────────────────────────────────────────────────
+    # Fin
     graph.add_edge("refine_output", END)
 
     return graph.compile()
