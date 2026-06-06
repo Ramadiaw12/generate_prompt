@@ -62,6 +62,7 @@ app.add_middleware(
         "http://localhost:3000",
         "https://getpromptcraft.org",
         "https://promptcraft.today",
+        "https://prompt-craft26.netlify.app",
     ],
     allow_methods=["GET", "POST"],
     allow_headers=["Authorization", "Content-Type"],
