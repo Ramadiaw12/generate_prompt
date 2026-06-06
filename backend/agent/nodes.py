@@ -21,7 +21,7 @@ llm = ChatGroq(
     temperature=0,
 )
 
-# Langue → instructions 
+# Langue   instructions 
 LANG_INSTRUCTIONS = {
     "fr": "Réponds UNIQUEMENT en français. Génère le prompt final en français.",
     "en": "Respond ONLY in English. Generate the final prompt in English.",
@@ -101,8 +101,17 @@ def structure_prompt(state: AgentState) -> AgentState:
 Tu es un expert en prompt engineering.
 {lang_instr}
 
-IMPORTANT : Tu génères un prompt CONCIS — maximum 2-3 lignes, efficace, direct.
-Pas de sections longues. Pas d'explications. Juste l'essentiel.
+IMPORTANT : 
+- Tu crées un prompt destiné à une autre IA.
+- Tu ne dois jamais exécuter la tâche.
+- Tu ne dois jamais répondre à la demande de l'utilisateur.
+- Tu dois uniquement transformer la demande en instructions optimisées.
+- Le prompt doit être très court et économe en tokens.
+- Tu génères un prompt CONCIS 
+— Maximum 2-3 lignes, efficace, direct.
+- Pas de sections longues. 
+- Pas d'explications. 
+- Juste l'essentiel.
 
 Retourne UNIQUEMENT un JSON valide sur UNE SEULE LIGNE :
 {{"role": "rôle en 1 phrase max", "context": "", "task": "tâche en 1 phrase directe", "output_format": "format en quelques mots", "constraints": "1-2 contraintes max"}}
@@ -114,12 +123,23 @@ Retourne UNIQUEMENT un JSON valide sur UNE SEULE LIGNE :
 Tu es un expert senior en prompt engineering.
 {lang_instr}
 
+IMPORTANT :
+- Tu génères un prompt destiné à être utilisé par une autre IA.
+- Tu n'es jamais l'IA qui exécute la tâche.
+- Ne réponds jamais directement à la demande de l'utilisateur.
+- Ne produis jamais le résultat final attendu.
+- Transforme uniquement la demande en instructions optimisées.
+- Conserve l'intention originale de l'utilisateur.
+
 Tu génères un prompt EXPERT ultra-détaillé et professionnel avec :
-- Rôle très précis avec expertise spécifique
-- Contexte riche et détaillé
-- Tâche décomposée en étapes claires
-- Format de sortie précis avec structure attendue
-- Contraintes strictes et exemples concrets
+- Un rôle très précis incluant le niveau d'expertise requis
+- Un contexte riche et détaillé
+- Une tâche décomposée en étapes logiques et séquentielles
+- Un format de sortie clairement défini
+- Des contraintes précises
+- Des critères de qualité
+- Des exemples lorsque cela apporte de la valeur
+
 
 Retourne UNIQUEMENT un JSON valide sur UNE SEULE LIGNE :
 {{"role": "rôle expert détaillé", "context": "contexte riche et complet", "task": "tâche décomposée en étapes", "output_format": "format précis avec structure", "constraints": "contraintes strictes + exemples"}}
@@ -131,8 +151,16 @@ Retourne UNIQUEMENT un JSON valide sur UNE SEULE LIGNE :
 Tu es un expert en prompt engineering.
 {lang_instr}
 
+IMPORTANT :
+- Tu génères un prompt destiné à être utilisé par une autre IA.
+- Tu n'es jamais l'IA qui exécute la tâche.
+- Ne réponds jamais directement à la demande de l'utilisateur.
+- Ne produis jamais le résultat final attendu.
+- Transforme uniquement la demande en instructions optimisées.
+- Conserve l'intention et l'objectif de l'utilisateur.
+
 Tu génères un prompt COMPLET et structuré avec 5 sections équilibrées.
-Chaque section doit être précise et professionnelle.
+Chaque section doit être précise, claire et professionnelle.
 
 Retourne UNIQUEMENT un JSON valide sur UNE SEULE LIGNE :
 {{"role": "rôle et persona claire", "context": "contexte et informations de fond", "task": "tâche précise à accomplir", "output_format": "format attendu de la réponse", "constraints": "contraintes et limites"}}
@@ -177,23 +205,52 @@ def refine_output(state: AgentState) -> AgentState:
     # Instructions d'assemblage selon le mode
     if mode == "concis":
         assembly_instr = """
-Assemble ces sections en UN prompt COURT de 2-3 lignes maximum.
-Sois direct et efficace. Supprime tout ce qui est superflu.
-Le prompt doit être utilisable immédiatement, sans introduction.
+Assemble ces sections en UN prompt court et optimisé destiné à une autre IA.
+
+Règles :
+- Maximum 2 à 3 lignes.
+- Conserve uniquement les informations essentielles.
+- Utilise des instructions directes et actionnables.
+- N'exécute jamais la tâche.
+- Ne produis jamais le résultat final attendu.
+- Génère uniquement le prompt final.
+- Aucune introduction, explication ou commentaire.
+
+Le prompt doit être immédiatement utilisable par une autre IA.
 IMPORTANT : 2-3 lignes MAXIMUM. Pas plus.
 """
     elif mode == "expert":
         assembly_instr = """
 Assemble ces sections en un prompt EXPERT ultra-professionnel et détaillé.
-Utilise une structure claire avec des marqueurs visuels si nécessaire.
-Le prompt doit être complet, précis et directement utilisable par un professionnel.
-Inclus des exemples concrets si pertinent.
+
+Règles :
+- Le résultat doit être un prompt destiné à une autre IA.
+- N'exécute jamais la tâche décrite.
+- Ne produis jamais la réponse finale attendue.
+- Conserve toutes les informations importantes des sections fournies.
+- Organise le contenu avec une structure claire et professionnelle.
+- Utilise des titres ou marqueurs visuels lorsque cela améliore la lisibilité.
+- Décompose les instructions complexes en étapes logiques.
+- Ajoute des critères de qualité et de validation lorsque pertinent.
+- Inclue des exemples uniquement comme exemples à suivre par l'IA cible, jamais comme résultat final.
+
+Le prompt doit être complet, précis et directement utilisable dans un contexte professionnel.
 """
     else:
         assembly_instr = """
 Assemble ces sections en un prompt COMPLET, fluide et professionnel.
-Garde toutes les informations importantes mais reste concis.
-Le prompt doit être naturel et directement utilisable.
+
+Règles :
+- Le résultat doit être un prompt destiné à une autre IA.
+- N'exécute jamais la tâche décrite.
+- Ne produis jamais la réponse finale attendue.
+- Conserve toutes les informations importantes.
+- Organise naturellement les instructions pour maximiser leur clarté.
+- Supprime les répétitions inutiles.
+- Garde un bon équilibre entre précision et concision.
+- N'ajoute aucune explication ou commentaire hors du prompt.
+
+Le prompt final doit être directement utilisable par une autre IA.
 """
 
     system = SystemMessage(content=f"""
@@ -237,6 +294,23 @@ def optimize_prompt(state: AgentState) -> AgentState:
     system_analyze = SystemMessage(content=f"""
 Tu es un expert senior en prompt engineering.
 {lang_instr}
+
+IMPORTANT :
+- Tu analyses uniquement la qualité du prompt fourni.
+- Tu n'exécutes jamais la tâche décrite dans le prompt.
+- Tu n'évalues pas le sujet traité mais la qualité des instructions.
+- Tu identifies les points faibles du prompt du point de vue du Prompt Engineering.
+- Tu identifies les éléments manquants qui pourraient améliorer le prompt.
+
+Critères d'évaluation :
+- Clarté des instructions
+- Précision de l'objectif
+- Contexte fourni
+- Contraintes définies
+- Format de sortie spécifié
+- Robustesse face aux ambiguïtés
+- Optimisation pour les modèles d'IA
+
 Analyse ce prompt et retourne UNIQUEMENT un JSON sur UNE SEULE LIGNE :
 {{"score_before": 0-100, "weaknesses": ["faiblesse 1", "faiblesse 2"], "missing_elements": ["element manquant"]}}
 """)
@@ -253,8 +327,18 @@ Analyse ce prompt et retourne UNIQUEMENT un JSON sur UNE SEULE LIGNE :
     system_opt = SystemMessage(content=f"""
 Tu es un expert senior en prompt engineering.
 {lang_instr}
-Réécris ce prompt pour le rendre professionnel et efficace.
-Retourne UNIQUEMENT le prompt optimisé, sans explication.
+Ta mission est uniquement d'améliorer et restructurer le prompt fourni.
+
+Règles obligatoires :
+- Génère un prompt destiné à être utilisé par une autre IA.
+- Ne réalise jamais la tâche demandée dans le prompt.
+- Ne réponds jamais à la demande de l'utilisateur.
+- Ne produis jamais le résultat attendu.
+- Reformule les instructions pour les rendre plus claires, précises et professionnelles.
+- Ajoute du contexte, des contraintes et un format de sortie si cela améliore le prompt.
+- Conserve l'intention originale de l'utilisateur.
+
+Retourne uniquement le prompt optimisé, sans explication, sans commentaire et sans balises markdown.
 """)
     try:
         r2 = llm.invoke([system_opt, HumanMessage(content=f"Prompt original : {prompt_to_optimize}\nFaiblesses : {', '.join(weaknesses)}")])

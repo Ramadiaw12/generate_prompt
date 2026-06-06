@@ -80,6 +80,8 @@ class PromptHistory(Base):
         index=True,
     )
 
+    mode = Column(String(20), nullable=False, default="complet") 
+    
     user_input   = Column(Text, nullable=False)
     intent       = Column(Text, nullable=True, default="")
     domain       = Column(String(50), nullable=True, default="autre")

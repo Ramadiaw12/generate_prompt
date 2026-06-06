@@ -60,7 +60,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        "https://prompt-craft26.netlify.app",
+        "https://getpromptcraft.org/",
         "https://promptcraft.today",
     ],
     allow_methods=["GET", "POST"],
@@ -358,9 +358,9 @@ async def my_plan(
         "plan": getattr(current_user, 'plan', 'free'),
         "features": {
             "generate_prompt": True,       # Free + Pro
-            "optimize_prompt": True,       # Pro uniquement (à activer)
-            "export": False,               # Pro uniquement (à venir)
-            "templates": False,            # Pro uniquement (à venir)
-            "batch": False,                # Expert uniquement (à venir)
+            "optimize_prompt": True,       # Pro uniquement 
+            "export": False,               # Pro uniquement 
+            "templates": False,            # Pro uniquement 
+            "batch": False,                # Expert uniquement
         }
     }

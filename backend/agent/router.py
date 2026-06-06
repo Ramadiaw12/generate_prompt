@@ -59,6 +59,7 @@ async def generate_prompt(
     #  Sauvegarde en base 
     history = PromptHistory(
         user_id=current_user.id,
+        mode=body.mode,
         raw_input=body.user_input,
         role=final_state.get("role", ""),
         context=final_state.get("context", ""),

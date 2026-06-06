@@ -24,6 +24,8 @@ class PromptHistory(SQLModel, table=True):
     id: Optional[int] = Field(default=None, primary_key=True)
     user_id: int = Field(foreign_key="user.id", index=True)
 
+    mode: str = Field(default="complet", max_length=20)
+    
     raw_input: str           # Ce que l'utilisateur a saisi
     role: str                # Section générée : rôle
     context: str             # Section générée : contexte
