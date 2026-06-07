@@ -64,7 +64,7 @@ app.add_middleware(
         "https://promptcraft.today",
         "https://prompt-craft26.netlify.app",
     ],
-    allow_methods=["GET", "POST"],
+    allow_methods=["*"],
     allow_headers=["Authorization", "Content-Type"],
     allow_credentials=True,
 )
