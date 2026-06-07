@@ -25,7 +25,7 @@ class User(Base):
 
     hashed_password = Column(
         String(255),
-        nullable=True,   # ✅ nullable pour les users Google (pas de mot de passe)
+        nullable=True,   # nullable pour les users Google (pas de mot de passe)
         default="",
     )
 

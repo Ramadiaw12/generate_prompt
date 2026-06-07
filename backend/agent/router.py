@@ -23,7 +23,7 @@ router = APIRouter(prefix="/prompt", tags=["prompt"])
 
 # Génération 
 
-@router.post("/generate", response_model=PromptResponse)
+@router.post("/generate-prompt", response_model=PromptResponse)
 async def generate_prompt(
     body: PromptRequest,
     current_user: User = Depends(get_current_user),
