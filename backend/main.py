@@ -61,11 +61,12 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "https://getpromptcraft.org",
+        "https://www.getpromptcraft.org",
         "https://promptcraft.today",
         "https://prompt-craft26.netlify.app",
     ],
     allow_methods=["*"],
-    allow_headers=["Authorization", "Content-Type"],
+    allow_headers=["*"],
     allow_credentials=True,
 )
 

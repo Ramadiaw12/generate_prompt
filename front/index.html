@@ -636,6 +636,55 @@ svg#flow{display:block;width:100%;overflow:visible;}
   background: var(--amber) !important;
   color: #fff !important;
 }
+
+/* ── History Search + Delete ── */
+.history-search-wrap {
+  padding: .8rem 1rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.history-search {
+  width: 100%;
+  font-family: 'DM Mono', monospace; font-size: .75rem;
+  color: var(--ink); background: var(--bg);
+  border: 1.5px solid var(--border); border-radius: 100px;
+  padding: .5em 1em .5em 2.2em;
+  outline: none; transition: border-color .18s;
+}
+.history-search:focus { border-color: var(--amber); }
+.history-search::placeholder { color: var(--muted); }
+.history-search-wrap { position: relative; }
+.history-search-icon {
+  position: absolute; left: 1.8rem; top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted); font-size: .8rem;
+  pointer-events: none;
+}
+.history-item { position: relative; padding-right: 2.5rem; }
+.history-delete-btn {
+  position: absolute; top: .8rem; right: .8rem;
+  width: 22px; height: 22px; border-radius: 50%;
+  background: transparent; border: none; cursor: pointer;
+  color: var(--muted); font-size: .75rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all .18s; opacity: 0;
+}
+.history-item:hover .history-delete-btn { opacity: 1; }
+.history-delete-btn:hover {
+  background: var(--rose-lt); color: var(--rose);
+}
+[data-theme="dark"] .history-search {
+  background: #111010 !important;
+  color: #f0ece4 !important;
+  border-color: #2a2620 !important;
+}
+[data-theme="dark"] .history-search-wrap {
+  border-color: #2a2620 !important;
+}
+[data-theme="dark"] .history-delete-btn:hover {
+  background: rgba(181,25,59,.2) !important;
+  color: var(--rose) !important;
+}
 </style>
 </head>
 <body>
@@ -897,6 +946,16 @@ svg#flow{display:block;width:100%;overflow:visible;}
     <div class="history-header">
       <div class="history-title" id="lbl-history-title">📋 Mes prompts</div>
       <button class="history-close" onclick="closeHistory()">×</button>
+    </div>
+    <div class="history-search-wrap">
+      <span class="history-search-icon">🔍</span>
+      <input
+        type="text"
+        class="history-search"
+        id="history-search"
+        placeholder="Rechercher un prompt..."
+        oninput="filterHistory(this.value)"
+      />
     </div>
     <div class="history-body" id="history-body">
       <div class="history-loading" id="history-loading" style="display:none">
@@ -1279,10 +1338,15 @@ function closeHistory() {
 function handleHistoryOverlayClick(e) {
   if (e.target === document.getElementById('history-overlay')) closeHistory();
 }
+let allPrompts = []; // cache pour la recherche
+
 async function loadHistory() {
   const loading = document.getElementById('history-loading');
   const empty   = document.getElementById('history-empty');
   const list    = document.getElementById('history-list');
+  const searchInput = document.getElementById('history-search');
+  if (searchInput) searchInput.value = '';
+
   loading.style.display = 'flex'; empty.style.display = 'none'; list.innerHTML = '';
   try {
     const res = await fetch(`${API}/my-prompts`, { headers:{'Authorization':`Bearer ${authToken}`} });
@@ -1290,43 +1354,106 @@ async function loadHistory() {
     const data = await res.json();
     loading.style.display = 'none';
     if (!data.prompts || data.prompts.length === 0) { empty.style.display = 'flex'; return; }
-    data.prompts.forEach(p => {
-      const date = new Date(p.created_at).toLocaleDateString('fr-FR', {day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
-      const item = document.createElement('div');
-      item.className = 'history-item';
-      // Fix XSS : utilise textContent au lieu de innerHTML
-      const domain = document.createElement('div');
-      domain.className = 'history-item-domain';
-      domain.textContent = p.domain || 'autre';
-
-      const input = document.createElement('div');
-      input.className = 'history-item-input';
-      input.textContent = p.user_input;
-
-      const meta = document.createElement('div');
-      meta.className = 'history-item-meta';
-
-      const dateSpan = document.createElement('span');
-      dateSpan.className = 'history-item-date';
-      dateSpan.textContent = date;
-
-      const badge = document.createElement('span');
-      badge.className = 'history-item-badge';
-      badge.textContent = p.complexity || 'medium';
-
-      meta.appendChild(dateSpan);
-      meta.appendChild(badge);
-      item.appendChild(domain);
-      item.appendChild(input);
-      item.appendChild(meta);
-      item.addEventListener('click', () => {
-        closeHistory();
-        renderResults({intent:'',domain:p.domain||'',complexity:p.complexity||'',role:'',context:'',task:'',output_format:'',constraints:'',full_prompt:p.full_prompt||''});
-        setTimeout(() => document.getElementById('results-section').scrollIntoView({behavior:'smooth'}), 300);
-      });
-      list.appendChild(item);
-    });
+    allPrompts = data.prompts;
+    renderHistoryList(allPrompts);
   } catch(err) { loading.style.display='none'; empty.style.display='flex'; }
+}
+
+function renderHistoryList(prompts) {
+  const list  = document.getElementById('history-list');
+  const empty = document.getElementById('history-empty');
+  list.innerHTML = '';
+
+  if (!prompts || prompts.length === 0) {
+    empty.style.display = 'flex'; return;
+  }
+  empty.style.display = 'none';
+
+  prompts.forEach(p => {
+    const date = new Date(p.created_at).toLocaleDateString('fr-FR', {
+      day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'
+    });
+    const item = document.createElement('div');
+    item.className = 'history-item';
+    item.dataset.id = p.id;
+
+    // Domaine
+    const domain = document.createElement('div');
+    domain.className = 'history-item-domain';
+    domain.textContent = p.domain || 'autre';
+
+    // Input
+    const input = document.createElement('div');
+    input.className = 'history-item-input';
+    input.textContent = p.user_input;
+
+    // Meta
+    const meta = document.createElement('div');
+    meta.className = 'history-item-meta';
+    const dateSpan = document.createElement('span');
+    dateSpan.className = 'history-item-date';
+    dateSpan.textContent = date;
+    const badge = document.createElement('span');
+    badge.className = 'history-item-badge';
+    badge.textContent = p.complexity || 'medium';
+    meta.appendChild(dateSpan);
+    meta.appendChild(badge);
+
+    // Bouton suppression ✕
+    const delBtn = document.createElement('button');
+    delBtn.className = 'history-delete-btn';
+    delBtn.textContent = '✕';
+    delBtn.title = 'Supprimer ce prompt';
+    delBtn.onclick = async (e) => {
+      e.stopPropagation(); // empêche d'ouvrir le prompt
+      if (!confirm('Supprimer ce prompt ?')) return;
+      try {
+        const res = await fetch(`${API}/my-prompts/${p.id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (res.ok) {
+          // Supprime du cache et re-render
+          allPrompts = allPrompts.filter(x => x.id !== p.id);
+          item.style.opacity = '0';
+          item.style.transform = 'translateX(20px)';
+          item.style.transition = 'all .25s';
+          setTimeout(() => renderHistoryList(allPrompts), 250);
+        }
+      } catch(err) { console.error(err); }
+    };
+
+    item.appendChild(domain);
+    item.appendChild(input);
+    item.appendChild(meta);
+    item.appendChild(delBtn);
+
+    // Clic pour afficher le prompt
+    item.addEventListener('click', () => {
+      closeHistory();
+      renderResults({
+        intent:'', domain:p.domain||'', complexity:p.complexity||'',
+        role:'', context:'', task:'', output_format:'', constraints:'',
+        full_prompt:p.full_prompt||''
+      });
+      setTimeout(() => document.getElementById('results-section').scrollIntoView({behavior:'smooth'}), 300);
+    });
+
+    list.appendChild(item);
+  });
+}
+
+function filterHistory(query) {
+  if (!query.trim()) {
+    renderHistoryList(allPrompts);
+    return;
+  }
+  const q = query.toLowerCase();
+  const filtered = allPrompts.filter(p =>
+    p.user_input.toLowerCase().includes(q) ||
+    (p.domain || '').toLowerCase().includes(q)
+  );
+  renderHistoryList(filtered);
 }
 
 // ═══════════════════════════════════════
