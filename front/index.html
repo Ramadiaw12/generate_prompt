@@ -1123,9 +1123,9 @@ function t(key) {
   return (T[currentLang] && T[currentLang][key]) || (T['fr'][key]) || key;
 }
 
-// ═══════════════════════════════════════
+// 
 // LANG
-// ═══════════════════════════════════════
+// 
 function setLang(lang) {
   currentLang = lang;
   localStorage.setItem('lang', lang);
@@ -1175,9 +1175,9 @@ function setLang(lang) {
   if (ta) ta.placeholder = phs[selectedMode];
 }
 
-// ═══════════════════════════════════════
+// 
 // UI UPDATE
-// ═══════════════════════════════════════
+// 
 function updateUI() {
   const loggedIn = isLoggedIn();
   document.getElementById('nav-login-btn').style.display   = loggedIn ? 'none' : '';
@@ -1200,9 +1200,9 @@ function updateUI() {
   wrap.classList.toggle('show', loggedIn);
 }
 
-// ═══════════════════════════════════════
+// 
 // MOBILE MENU
-// ═══════════════════════════════════════
+// 
 function toggleMobileMenu() {
   const btn = document.getElementById('burger-btn');
   const menu = document.getElementById('mobile-menu');
@@ -1216,9 +1216,9 @@ function closeMobileMenu() {
   document.body.style.overflow = '';
 }
 
-// ═══════════════════════════════════════
+// 
 // MODE SELECTOR
-// ═══════════════════════════════════════
+// 
 function setMode(mode) {
   if (mode === 'expert' && !isLoggedIn()) { openAuth('signup'); return; }
   selectedMode = mode;
@@ -1231,9 +1231,9 @@ function setMode(mode) {
   document.getElementById('user-input-field').placeholder = phs[mode];
 }
 
-// ═══════════════════════════════════════
+// 
 // AUTH
-// ═══════════════════════════════════════
+// 
 
 function switchAuthTab(mode) {
   authMode = mode;
@@ -1323,9 +1323,9 @@ document.getElementById('auth-overlay').addEventListener('click', e => {
   if (e.target === document.getElementById('auth-overlay')) closeAuth();
 });
 
-// ═══════════════════════════════════════
+// 
 // HISTORY
-// ═══════════════════════════════════════
+// 
 function openHistory() {
   document.getElementById('history-overlay').classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -1456,9 +1456,9 @@ function filterHistory(query) {
   renderHistoryList(filtered);
 }
 
-// ═══════════════════════════════════════
+// 
 // GENERATE
-// ═══════════════════════════════════════
+// 
 async function generatePrompt() {
   const input = document.getElementById('user-input-field').value.trim();
   const errEl = document.getElementById('gen-error');
@@ -1517,9 +1517,9 @@ document.getElementById('user-input-field').addEventListener('keydown', e => {
   if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) generatePrompt();
 });
 
-// ═══════════════════════════════════════════════
+// 
 // PROMPT EDITOR
-// ═══════════════════════════════════════════════
+// 
 let isEditing = false;
 
 function toggleEdit() {
@@ -1577,7 +1577,7 @@ function updateIALaunchers(promptText) {
     }).catch(() => window.open('https://gemini.google.com/app', '_blank'));
   };
 
-  // DeepSeek — copie + ouvre
+  // DeepSeek  copie + ouvre
   const dsBtn = document.getElementById('btn-deepseek');
   dsBtn.href = '#';
   dsBtn.onclick = (e) => {
@@ -1594,9 +1594,9 @@ function updateIALaunchers(promptText) {
 }
 
 
-// ═══════════════════════════════════════════════
-// GEMINI API — réponse directe dans la page
-// ═══════════════════════════════════════════════
+// 
+// GEMINI API  réponse directe dans la page
+// 
 let currentPromptText = '';
 
 async function askGemini() {
@@ -1650,9 +1650,8 @@ function closeGemini() {
   document.getElementById('gemini-response').textContent = '';
 }
 
-// ═══════════════════════════════════════
 // NODE MODAL
-// ═══════════════════════════════════════
+// 
 const DATA = {
   "max-tokens":{color:"#e8740c",tag:"Paramètre",title:"Max Tokens",desc:"Définit la longueur maximale de la réponse en tokens.",inputs:["Entier (ex : 512, 1024, 4096)"],outputs:["Longueur max du texte généré"],note:["Plus haut = réponse plus longue","Impact sur le coût API"]},
   "temperature":{color:"#e8740c",tag:"Paramètre",title:"Temperature",desc:"Contrôle le degré de créativité dans les réponses.",inputs:["Float entre 0.0 et 2.0"],outputs:["Variabilité de la réponse"],note:["0 = déterministe","1 = équilibré",">1 = créatif"]},
@@ -1690,9 +1689,9 @@ document.querySelectorAll('.node').forEach(n => {
 document.getElementById('close-btn').addEventListener('click', () => document.getElementById('overlay').classList.remove('open'));
 document.getElementById('overlay').addEventListener('click', e => { if(e.target===document.getElementById('overlay')) document.getElementById('overlay').classList.remove('open'); });
 
-// ═══════════════════════════════════════
+// 
 // GOOGLE TOKEN + INIT
-// ═══════════════════════════════════════
+// 
 function readGoogleToken() {
   const params = new URLSearchParams(window.location.search);
   const token = params.get('token');
