@@ -973,9 +973,9 @@ svg#flow{display:block;width:100%;overflow:visible;}
 
 <script>
 
-// ═══════════════════════════════════════════════
+// 
 // DARK MODE TOGGLE
-// ═══════════════════════════════════════════════
+// 
 let isDark = localStorage.getItem('theme') === 'dark';
 
 function applyTheme() {
@@ -988,15 +988,15 @@ function toggleTheme() {
   applyTheme();
 }
 
-// ═══════════════════════════════════════
+// 
 // CONFIG
-// ═══════════════════════════════════════
+// 
 const API = 'https://promptcraft.today';
 // const API = 'http://localhost:8000';
 
-// ═══════════════════════════════════════
+// 
 // STATE
-// ═══════════════════════════════════════
+// 
 let authMode     = 'login';
 let selectedMode = 'concis';
 let currentLang  = localStorage.getItem('lang') || 'fr';
@@ -1005,9 +1005,9 @@ let userEmail    = localStorage.getItem('user_email') || null;
 
 function isLoggedIn() { return !!authToken; }
 
-// ═══════════════════════════════════════
+// 
 // TRANSLATIONS
-// ═══════════════════════════════════════
+// 
 const T = {
   fr: {
     dir:'ltr',
@@ -1718,7 +1718,6 @@ document.getElementById('results-section').classList.remove('show');
   <div class="footer-bar">
     <span class="footer-by">Designed &amp; built by</span>
     <span class="footer-initials">RD</span>
-    <span class="footer-name-highlight">Ramatoulaye Diawane</span>
     <div class="footer-dot"></div>
     <span>PromptCraft © 2026</span>
     <div class="footer-dot"></div>
