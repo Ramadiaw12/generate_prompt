@@ -65,7 +65,7 @@ engine = create_engine(
     echo=False,
 )
 
-# ── Classe de base pour les modèles 
+# Classe de base pour les modèles 
 
 Base = declarative_base()
 # Toutes nos tables (User, PromptHistory...) vont hériter de cette classe
