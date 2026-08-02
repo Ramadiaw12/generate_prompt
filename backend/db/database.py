@@ -79,7 +79,7 @@ SessionLocal = sessionmaker(
     autoflush=False,    # on gère nous-mêmes les flush (plus de contrôle)
 )
 # SessionLocal est une "classe" qu'on instancie pour ouvrir une session
-# Exemple : db = SessionLocal() → ouvre une connexion à PostgreSQL
+# Exemple : db = SessionLocal() : ouvre une connexion à PostgreSQL
 
 # Fonction de création des tables 
 
@@ -107,7 +107,7 @@ def get_db() -> Generator[Session, None, None]:
     2. Une session est ouverte (db = SessionLocal())
     3. La session est passée à la route via Depends(get_db)
     4. Après la requête, la session est TOUJOURS fermée (finally)
-       → même si une erreur survient, la connexion est libérée
+        même si une erreur survient, la connexion est libérée
     
     Utilisation dans une route :
         @app.get("/exemple")

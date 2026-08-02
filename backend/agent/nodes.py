@@ -1,10 +1,10 @@
 # =============================================================================
 # Fichier : backend/agent/nodes.py
 # Rôle    : Nodes LangGraph — génération de prompts
-#           Mode concis  → prompt 2-3 lignes
-#           Mode complet → prompt 5 sections détaillées
-#           Mode expert  → prompt ultra-détaillé avec exemples
-#           Langue       → prompt généré dans la langue choisie (fr/en/ar)
+#           Mode concis  : prompt 2-3 lignes
+#           Mode complet : prompt 5 sections détaillées
+#           Mode expert  : prompt ultra-détaillé avec exemples
+#           Langue       : prompt généré dans la langue choisie (fr/en/ar)
 # =============================================================================
 
 import os, json, re
@@ -61,12 +61,12 @@ def analyze_input(state: AgentState) -> AgentState:
     lang_instr = get_lang_instruction(lang)
 
     system = SystemMessage(content=f"""
-Tu es un expert en analyse de requêtes pour la génération de prompts.
-{lang_instr}
-Analyse la demande et retourne UNIQUEMENT un JSON valide sur UNE SEULE LIGNE :
-{{"intent": "intention courte", "domain": "code|redaction|analyse|image|data|education|business|autre", "complexity": "simple|medium|complex"}}
-Ne mets RIEN avant ou après le JSON.
-""")
+    Tu es un expert en analyse de requêtes pour la génération de prompts.
+    {lang_instr}
+    Analyse la demande et retourne UNIQUEMENT un JSON valide sur UNE SEULE LIGNE :
+    {{"intent": "intention courte", "domain": "code|redaction|analyse|image|data|education|business|autre", "complexity": "simple|medium|complex"}}
+    Ne mets RIEN avant ou après le JSON.
+    """)
     human = HumanMessage(content=f"Demande : {state['user_input']}")
 
     try:
@@ -125,7 +125,7 @@ Tu es un expert senior en prompt engineering.
 
 IMPORTANT :
 - Tu génères un prompt destiné à être utilisé par une autre IA.
-- Tu n'es jamais l'IA qui exécute la tâche.
+- Tu ne dois jamais exécuter la tâche.
 - Ne réponds jamais directement à la demande de l'utilisateur.
 - Ne produis jamais le résultat final attendu.
 - Transforme uniquement la demande en instructions optimisées.
@@ -225,7 +225,7 @@ Assemble ces sections en un prompt EXPERT ultra-professionnel et détaillé.
 
 Règles :
 - Le résultat doit être un prompt destiné à une autre IA.
-- N'exécute jamais la tâche décrite.
+- N'exécute jamais la tâche.
 - Ne produis jamais la réponse finale attendue.
 - Conserve toutes les informations importantes des sections fournies.
 - Organise le contenu avec une structure claire et professionnelle.
@@ -242,7 +242,7 @@ Assemble ces sections en un prompt COMPLET, fluide et professionnel.
 
 Règles :
 - Le résultat doit être un prompt destiné à une autre IA.
-- N'exécute jamais la tâche décrite.
+- N'exécute jamais la tâche.
 - Ne produis jamais la réponse finale attendue.
 - Conserve toutes les informations importantes.
 - Organise naturellement les instructions pour maximiser leur clarté.
@@ -254,18 +254,18 @@ Le prompt final doit être directement utilisable par une autre IA.
 """
 
     system = SystemMessage(content=f"""
-Tu es un expert en prompt engineering.
-{lang_instr}
-{assembly_instr}
-Retourne UNIQUEMENT le texte du prompt final. Pas de JSON, pas de balises, pas d'introduction.
+    Tu es un expert en prompt engineering.
+    {lang_instr}
+    {assembly_instr}
+    Retourne UNIQUEMENT le texte du prompt final. Pas de JSON, pas de balises, pas d'introduction.
 """)
 
     human = HumanMessage(content=f"""
-RÔLE : {state.get('role', '')}
-CONTEXTE : {state.get('context', '')}
-TÂCHE : {state.get('task', '')}
-FORMAT : {state.get('output_format', '')}
-CONTRAINTES : {state.get('constraints', '')}
+    RÔLE : {state.get('role', '')}
+    CONTEXTE : {state.get('context', '')}
+    TÂCHE : {state.get('task', '')}
+    FORMAT : {state.get('output_format', '')}
+    CONTRAINTES : {state.get('constraints', '')}
 """)
 
     try:
