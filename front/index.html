@@ -1492,33 +1492,33 @@ function renderHistoryList(prompts) {
     meta.appendChild(badge);
 
     // Bouton suppression ✕
-    const delBtn = document.createElement('button');
-    delBtn.className = 'history-delete-btn';
-    delBtn.textContent = '✕';
-    delBtn.title = 'Supprimer ce prompt';
-    delBtn.onclick = async (e) => {
-      e.stopPropagation(); // empêche d'ouvrir le prompt
-      if (!confirm('Supprimer ce prompt ?')) return;
-      try {
-        const res = await fetch(`${API}/my-prompts/${p.id}`, {
-          method: 'DELETE',
-          headers: { 'Authorization': `Bearer ${authToken}` }
-        });
-        if (res.ok) {
-          // Supprime du cache et re-render
-          allPrompts = allPrompts.filter(x => x.id !== p.id);
-          item.style.opacity = '0';
-          item.style.transform = 'translateX(20px)';
-          item.style.transition = 'all .25s';
-          setTimeout(() => renderHistoryList(allPrompts), 250);
-        }
-      } catch(err) { console.error(err); }
-    };
+    // const delBtn = document.createElement('button');
+    // delBtn.className = 'history-delete-btn';
+    // delBtn.textContent = '✕';
+    // delBtn.title = 'Supprimer ce prompt';
+    // delBtn.onclick = async (e) => {
+    //   e.stopPropagation(); // empêche d'ouvrir le prompt
+    //   if (!confirm('Supprimer ce prompt ?')) return;
+    //   try {
+    //     const res = await fetch(`${API}/my-prompts/${p.id}`, {
+    //       method: 'DELETE',
+    //       headers: { 'Authorization': `Bearer ${authToken}` }
+    //     });
+    //     if (res.ok) {
+    //       // Supprime du cache et re-render
+    //       allPrompts = allPrompts.filter(x => x.id !== p.id);
+    //       item.style.opacity = '0';
+    //       item.style.transform = 'translateX(20px)';
+    //       item.style.transition = 'all .25s';
+    //       setTimeout(() => renderHistoryList(allPrompts), 250);
+    //     }
+    //   } catch(err) { console.error(err); }
+    // };
 
-    item.appendChild(domain);
-    item.appendChild(input);
-    item.appendChild(meta);
-    item.appendChild(delBtn);
+    // item.appendChild(domain);
+    // item.appendChild(input);
+    // item.appendChild(meta);
+    // item.appendChild(delBtn);
 
     // Clic pour afficher le prompt
     // Boutons actions (favori + supprimer)
