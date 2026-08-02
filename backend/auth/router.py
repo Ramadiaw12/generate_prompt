@@ -131,7 +131,7 @@ def get_or_create_google_user(db: Session, email: str, name: str, picture: str) 
     user = db.query(User).filter(User.email == email).first()
 
     if user:
-        # L'user existe → on met à jour son provider si nécessaire
+        # L'user existe  on met à jour son provider si nécessaire
         if user.auth_provider != "google":
             user.auth_provider = "google"
             db.commit()

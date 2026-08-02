@@ -301,6 +301,9 @@ async def my_prompts(
                 "domain": p.domain,
                 "complexity": p.complexity,
                 "full_prompt": p.full_prompt,
+                "is_favorite": getattr(p, "is_favorite", False) or False,
+                "tags": getattr(p, "tags", "") or "",
+                "collection": getattr(p, "collection", "général") or "général",
                 "created_at": p.created_at.isoformat(),
             }
             for p in prompts

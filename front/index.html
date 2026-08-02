@@ -685,6 +685,91 @@ svg#flow{display:block;width:100%;overflow:visible;}
   background: rgba(181,25,59,.2) !important;
   color: var(--rose) !important;
 }
+
+/* Memory features */
+.history-tabs {
+  display: flex; gap: 0;
+  padding: .5rem 1rem;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.history-tab {
+  flex: 1; font-family: 'DM Mono', monospace;
+  font-size: .62rem; letter-spacing: .06em;
+  padding: .4em .5em; border: none; background: transparent;
+  color: var(--muted); cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all .18s; text-align: center;
+}
+.history-tab.active {
+  color: var(--amber);
+  border-bottom-color: var(--amber);
+}
+.history-tab:hover { color: var(--ink); }
+
+.history-item-actions {
+  display: flex; gap: .3rem;
+  position: absolute; top: .7rem; right: .7rem;
+  opacity: 0; transition: opacity .18s;
+}
+.history-item:hover .history-item-actions { opacity: 1; }
+
+.action-btn {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: none; cursor: pointer; font-size: .7rem;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bg); color: var(--muted);
+  transition: all .18s;
+}
+.action-btn:hover { transform: scale(1.15); }
+.action-btn.fav { color: #f5a623; }
+.action-btn.fav.active { background: #fff8e0; color: #e8740c; }
+.action-btn.del:hover { background: var(--rose-lt); color: var(--rose); }
+
+.history-item-tags {
+  display: flex; flex-wrap: wrap; gap: .3rem;
+  margin-top: .4rem;
+}
+.history-tag {
+  font-family: 'DM Mono', monospace; font-size: .55rem;
+  padding: .15em .5em; border-radius: 100px;
+  background: var(--blue-lt); color: var(--blue);
+  letter-spacing: .04em;
+}
+
+.collection-badge {
+  font-family: 'DM Mono', monospace; font-size: .55rem;
+  padding: .15em .5em; border-radius: 100px;
+  background: var(--green-lt); color: var(--green);
+}
+
+.collections-list {
+  padding: .8rem 1rem; display: flex;
+  flex-direction: column; gap: .4rem;
+}
+.collection-item {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .6rem .8rem; border-radius: 10px;
+  background: var(--bg); border: 1px solid var(--border);
+  cursor: pointer; transition: all .18s;
+}
+.collection-item:hover {
+  border-color: var(--amber); background: var(--amber-lt);
+}
+.collection-name {
+  font-size: .82rem; color: var(--ink); font-weight: 500;
+}
+.collection-count {
+  font-family: 'DM Mono', monospace; font-size: .62rem;
+  color: var(--muted); background: var(--border);
+  padding: .2em .6em; border-radius: 100px;
+}
+
+/* Dark mode */
+[data-theme="dark"] .history-tab.active { color: var(--amber); }
+[data-theme="dark"] .action-btn { background: #1a1814; }
+[data-theme="dark"] .collection-item { background: #111010; border-color: #2a2620; }
+[data-theme="dark"] .collection-item:hover { background: #2a1f10; border-color: var(--amber); }
 </style>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
@@ -948,6 +1033,11 @@ svg#flow{display:block;width:100%;overflow:visible;}
     <div class="history-header">
       <div class="history-title" id="lbl-history-title">📋 Mes prompts</div>
       <button class="history-close" onclick="closeHistory()">×</button>
+    </div>
+    <div class="history-tabs">
+      <button class="history-tab active" id="tab-all" onclick="switchHistoryTab('all')">📋 Tous</button>
+      <button class="history-tab" id="tab-favorites" onclick="switchHistoryTab('favorites')">⭐ Favoris</button>
+      <button class="history-tab" id="tab-collections" onclick="switchHistoryTab('collections')">📁 Dossiers</button>
     </div>
     <div class="history-search-wrap">
       <span class="history-search-icon">🔍</span>
@@ -1431,6 +1521,59 @@ function renderHistoryList(prompts) {
     item.appendChild(delBtn);
 
     // Clic pour afficher le prompt
+    // Boutons actions (favori + supprimer)
+    const actions = document.createElement('div');
+    actions.className = 'history-item-actions';
+
+    const favBtn = document.createElement('button');
+    favBtn.className = 'action-btn fav' + (p.is_favorite ? ' active' : '');
+    favBtn.textContent = p.is_favorite ? '⭐' : '☆';
+    favBtn.title = 'Ajouter aux favoris';
+    favBtn.onclick = (e) => { e.stopPropagation(); toggleFavorite(p.id, favBtn); };
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'action-btn del';
+    delBtn.textContent = '✕';
+    delBtn.title = 'Supprimer';
+    delBtn.onclick = async (e) => {
+      e.stopPropagation();
+      if (!confirm('Supprimer ce prompt ?')) return;
+      try {
+        const res = await fetch(`${API}/my-prompts/${p.id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (res.ok) {
+          allPrompts = allPrompts.filter(x => x.id !== p.id);
+          item.style.opacity = '0';
+          item.style.transform = 'translateX(20px)';
+          item.style.transition = 'all .25s';
+          setTimeout(() => renderHistoryList(allPrompts), 250);
+        }
+      } catch(err) { console.error(err); }
+    };
+
+    actions.appendChild(favBtn);
+    actions.appendChild(delBtn);
+
+    // Tags
+    if (p.tags) {
+      const tagsDiv = document.createElement('div');
+      tagsDiv.className = 'history-item-tags';
+      p.tags.split(',').filter(t => t.trim()).forEach(tag => {
+        const t = document.createElement('span');
+        t.className = 'history-tag';
+        t.textContent = '#' + tag.trim();
+        tagsDiv.appendChild(t);
+      });
+      item.appendChild(tagsDiv);
+    }
+
+    item.appendChild(domain);
+    item.appendChild(input);
+    item.appendChild(meta);
+    item.appendChild(actions);
+
     item.addEventListener('click', () => {
       closeHistory();
       renderResults({
