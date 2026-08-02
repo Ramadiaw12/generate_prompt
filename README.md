@@ -510,7 +510,7 @@ Single `index.html` — **no build step, no framework, no bundler.**
 | Service | Platform | URL |
 |---------|----------|-----|
 | 🚀 Backend | Railway | [promptcraft.today](https://promptcraft.today) |
-| 🌐 Frontend | Netlify | [prompt-craft26.netlify.app](https://prompt-craft26.netlify.app) |
+| 🌐 Frontend | Netlify | [prompt-craft26.netlify.app](https://getpromptcraft.org/) |
 | 🗄️ Database | Railway PostgreSQL | Private |
 
 ---
@@ -584,7 +584,7 @@ git push origin feat/your-feature-name
 
 ### 🌍 Try PromptCraft now
 
-**[promptcraft.today](https://prompt-craft26.netlify.app/)**
+**[promptcraft.today](https://getpromptcraft.org/)**
 
 *Transform your ideas into perfect prompts in 3 seconds.*
 
