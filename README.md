@@ -3,12 +3,13 @@
 <img src="https://readme-typing-svg.demolab.com?font=Fira+Code&size=28&duration=3000&pause=1000&color=E8740C&center=true&vCenter=true&width=700&lines=PromptCraft+%E2%80%94+AI+Prompt+Engineer;Transform+ideas+into+perfect+prompts;Build+better+prompts%2C+faster." alt="Typing SVG" />
 
 <br/>
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
-[![LangGraph](https://img.shields.io/badge/LangGraph-Agent-1a5fb4?style=for-the-badge&logo=chainlink&logoColor=white)](https://langchain-ai.github.io/langgraph/)
-[![Groq](https://img.shields.io/badge/Groq-LLaMA3-f55036?style=for-the-badge&logo=groq&logoColor=white)](https://groq.com)
-[![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://postgresql.org)
-[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com)
+
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=for-the-badge&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com) 
+[![LangGraph](https://img.shields.io/badge/LangGraph-Agent-1a5fb4?style=for-the-badge&logo=chainlink&logoColor=white)](https://langchain-ai.github.io/langgraph/) 
+[![Groq](https://img.shields.io/badge/Groq-LLaMA3-f55036?style=for-the-badge&logo=groq&logoColor=white)](https://groq.com) 
+[![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://python.org) 
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://postgresql.org) 
+[![Docker](https://img.shields.io/badge/Docker-Containerized-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://docker.com) 
 [![License](https://img.shields.io/badge/License-MIT-276f4c?style=for-the-badge)](LICENSE)
 
 <br/>
