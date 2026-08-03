@@ -346,6 +346,78 @@ async def ask_gemini(
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur Gemini : {str(e)}")
 
+
+# ══════════════════════════════════════════════════════
+# MÉMOIRE INTELLIGENTE — favoris, tags, collections
+# ══════════════════════════════════════════════════════
+
+class UpdatePromptMeta(BaseModel):
+    is_favorite: Optional[bool] = None
+    tags:        Optional[str]  = None
+    collection:  Optional[str]  = None
+
+@app.patch("/my-prompts/{prompt_id}")
+@limiter.limit("30/minute")
+async def update_prompt_meta(
+    request: Request,
+    prompt_id: int,
+    body: UpdatePromptMeta,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    prompt = db.query(PromptHistory).filter(
+        PromptHistory.id == prompt_id,
+        PromptHistory.user_id == current_user.id
+    ).first()
+    if not prompt:
+        raise HTTPException(status_code=404, detail="Prompt non trouvé.")
+    if body.is_favorite is not None:
+        prompt.is_favorite = body.is_favorite
+    if body.tags is not None:
+        prompt.tags = body.tags
+    if body.collection is not None:
+        prompt.collection = body.collection
+    db.commit()
+    db.refresh(prompt)
+    return {"id": prompt.id, "is_favorite": prompt.is_favorite, "tags": prompt.tags, "collection": prompt.collection}
+
+@app.get("/my-prompts/favorites")
+@limiter.limit("20/minute")
+async def get_favorites(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    prompts = (
+        db.query(PromptHistory)
+        .filter(PromptHistory.user_id == current_user.id, PromptHistory.is_favorite == True)
+        .order_by(PromptHistory.created_at.desc())
+        .all()
+    )
+    return {"total": len(prompts), "prompts": [
+        {"id": p.id, "user_input": p.user_input, "domain": p.domain,
+         "complexity": p.complexity, "full_prompt": p.full_prompt,
+         "is_favorite": p.is_favorite,
+         "tags": getattr(p, "tags", "") or "",
+         "collection": getattr(p, "collection", "général") or "général",
+         "created_at": p.created_at.isoformat()}
+        for p in prompts
+    ]}
+
+@app.get("/my-collections")
+@limiter.limit("20/minute")
+async def get_collections(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    prompts = db.query(PromptHistory).filter(PromptHistory.user_id == current_user.id).all()
+    collections = {}
+    for p in prompts:
+        col = getattr(p, "collection", "général") or "général"
+        collections[col] = collections.get(col, 0) + 1
+    return {"collections": collections}
+
 # Route : Infos plan utilisateur 
 
 @app.get("/my-plan")
