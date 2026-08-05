@@ -59,7 +59,7 @@ oauth.register(
     client_kwargs={
         "scope": "openid email profile",
         # openid  : authentification
-        # email   : récupérer l'email de l'user
+        # email   : récupérer l'email du user
         # profile : récupérer le nom et la photo
     },
 )
@@ -264,7 +264,6 @@ async def google_login(request: Request):
     """
     redirect_uri = "https://promptcraft.today/auth/google/callback"
     # request.url_for génère automatiquement l'URL de callback
-    # Ex: https://promptcraft.today/auth/google/callback
 
     return await oauth.google.authorize_redirect(request, redirect_uri)
 

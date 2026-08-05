@@ -128,18 +128,17 @@ IMPORTANT :
 - Tu ne dois jamais exécuter la tâche.
 - Ne réponds jamais directement à la demande de l'utilisateur.
 - Ne produis jamais le résultat final attendu.
-- Transforme uniquement la demande en instructions optimisées.
+- Tu dois uniquement transformer la demande en instructions optimisées.
 - Conserve l'intention originale de l'utilisateur.
+- Un rôle très précis incluant le niveau d'expertise requis.
+- Un contexte riche et détaillé.
+- Un format de sortie clairement défini.
+- Des critères de qualité.
+- Des exemples lorsque cela apporte de la valeur.
+- Des contraintes précises.
 
-Tu génères un prompt EXPERT ultra-détaillé et professionnel avec :
-- Un rôle très précis incluant le niveau d'expertise requis
-- Un contexte riche et détaillé
-- Une tâche décomposée en étapes logiques et séquentielles
-- Un format de sortie clairement défini
-- Des contraintes précises
-- Des critères de qualité
-- Des exemples lorsque cela apporte de la valeur
-
+Tu génères un prompt EXPERT et structuré avec 5 sections équilibrées.
+Chaque section doit être précise, claire et professionnelle.
 
 Retourne UNIQUEMENT un JSON valide sur UNE SEULE LIGNE :
 {{"role": "rôle expert détaillé", "context": "contexte riche et complet", "task": "tâche décomposée en étapes", "output_format": "format précis avec structure", "constraints": "contraintes strictes + exemples"}}
