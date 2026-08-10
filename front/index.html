@@ -1856,6 +1856,104 @@ setLang(currentLang);
 updateUI();
 document.getElementById('user-input-field').value = '';
 document.getElementById('results-section').classList.remove('show');
+
+// ═══════════════════════════════════════════════
+// MÉMOIRE INTELLIGENTE — favoris + collections
+// ═══════════════════════════════════════════════
+let currentTab = 'all';
+
+function switchHistoryTab(tab) {
+  currentTab = tab;
+  ['all','favorites','collections'].forEach(t => {
+    const btn = document.getElementById('tab-' + t);
+    if (btn) btn.classList.toggle('active', t === tab);
+  });
+  const search = document.querySelector('.history-search-wrap');
+  if (search) search.style.display = tab === 'collections' ? 'none' : 'block';
+  if (tab === 'all')              renderHistoryList(allPrompts);
+  else if (tab === 'favorites')   loadFavorites();
+  else if (tab === 'collections') loadCollections();
+}
+
+async function loadFavorites() {
+  const list  = document.getElementById('history-list');
+  const empty = document.getElementById('history-empty');
+  list.innerHTML = '';
+  empty.style.display = 'none';
+  try {
+    const res = await fetch(`${API}/my-prompts/favorites`, {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    const data = await res.json();
+    if (!data.prompts || data.prompts.length === 0) {
+      empty.style.display = 'flex';
+      const p = empty.querySelector('p');
+      if (p) p.textContent = 'Aucun favori. Cliquez ⭐ sur un prompt !';
+      return;
+    }
+    renderHistoryList(data.prompts);
+  } catch(err) { console.error('loadFavorites:', err); }
+}
+
+async function loadCollections() {
+  const list  = document.getElementById('history-list');
+  const empty = document.getElementById('history-empty');
+  list.innerHTML = '';
+  empty.style.display = 'none';
+  try {
+    const res = await fetch(`${API}/my-collections`, {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    const data = await res.json();
+    const cols = data.collections || {};
+    if (Object.keys(cols).length === 0) { empty.style.display = 'flex'; return; }
+    const icons = {'général':'📋','marketing':'📈','code':'💻','rédaction':'✍️','data':'📊','business':'💼','éducation':'🎓','créativité':'🎨'};
+    const colDiv = document.createElement('div');
+    colDiv.style.cssText = 'padding:.8rem 1rem;display:flex;flex-direction:column;gap:.5rem;';
+    Object.entries(cols).forEach(([name, count]) => {
+      const icon = icons[name.toLowerCase()] || '📁';
+      const item = document.createElement('div');
+      item.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:.7rem .9rem;border-radius:10px;background:var(--bg);border:1px solid var(--border);cursor:pointer;transition:all .18s;';
+      item.onmouseenter = () => { item.style.borderColor='var(--amber)'; item.style.background='var(--amber-lt)'; };
+      item.onmouseleave = () => { item.style.borderColor='var(--border)'; item.style.background='var(--bg)'; };
+      const nameEl = document.createElement('span');
+      nameEl.style.cssText = 'font-size:.84rem;color:var(--ink);font-weight:500;';
+      nameEl.textContent = icon + ' ' + name;
+      const countEl = document.createElement('span');
+      countEl.style.cssText = 'font-family:"DM Mono",monospace;font-size:.62rem;color:var(--muted);background:var(--border);padding:.2em .6em;border-radius:100px;';
+      countEl.textContent = count + ' prompt' + (count > 1 ? 's' : '');
+      item.appendChild(nameEl);
+      item.appendChild(countEl);
+      item.onclick = () => {
+        const filtered = allPrompts.filter(p => (p.collection||'général') === name);
+        switchHistoryTab('all');
+        renderHistoryList(filtered);
+        const s = document.getElementById('history-search');
+        if (s) s.value = name;
+      };
+      colDiv.appendChild(item);
+    });
+    list.appendChild(colDiv);
+  } catch(err) { console.error('loadCollections:', err); }
+}
+
+async function toggleFavorite(promptId, btn) {
+  const isFav = btn.classList.contains('active');
+  try {
+    const res = await fetch(`${API}/my-prompts/${promptId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+      body: JSON.stringify({ is_favorite: !isFav })
+    });
+    if (res.ok) {
+      btn.classList.toggle('active', !isFav);
+      btn.textContent = isFav ? '☆' : '⭐';
+      const p = allPrompts.find(x => x.id === promptId);
+      if (p) p.is_favorite = !isFav;
+    }
+  } catch(err) { console.error('toggleFavorite:', err); }
+}
+
 </script>
 
 <!-- ── Footer ── -->
