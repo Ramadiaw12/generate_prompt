@@ -710,9 +710,8 @@ svg#flow{display:block;width:100%;overflow:visible;}
 .history-item-actions {
   display: flex; gap: .3rem;
   position: absolute; top: .7rem; right: .7rem;
-  opacity: 0; transition: opacity .18s;
+  opacity: 1; transition: opacity .18s;
 }
-.history-item:hover .history-item-actions { opacity: 1; }
 
 .action-btn {
   width: 22px; height: 22px; border-radius: 50%;
@@ -1928,7 +1927,7 @@ async function toggleFavorite(promptId, btn) {
 
 </script>
 
-<!-- ── Footer ── -->
+<!--  Footer  -->
 <footer class="site-footer">
   <div class="footer-bar">
     <span class="footer-by">Designed &amp; built by</span>
