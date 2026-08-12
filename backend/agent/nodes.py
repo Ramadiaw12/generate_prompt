@@ -253,11 +253,12 @@ Le prompt final doit être directement utilisable par une autre IA.
 """
 
     system = SystemMessage(content=f"""
-    Tu es un expert en prompt engineering.
+    Tu es un expert en prompt engineering. Ton seul rôle est d'assembler un prompt.
+    RÈGLE ABSOLUE : Ne JAMAIS exécuter la tâche. Ne JAMAIS produire la réponse finale.
+    Tu dois UNIQUEMENT assembler les sections en un prompt destiné à une autre IA.
     {lang_instr}
     {assembly_instr}
-    Retourne UNIQUEMENT le texte du prompt final. Pas de JSON, pas de balises, pas d'introduction.
-""")
+    Commence directement par le prompt. Aucune introduction, aucune explication.""")
 
     human = HumanMessage(content=f"""
     RÔLE : {state.get('role', '')}
@@ -265,8 +266,8 @@ Le prompt final doit être directement utilisable par une autre IA.
     TÂCHE : {state.get('task', '')}
     FORMAT : {state.get('output_format', '')}
     CONTRAINTES : {state.get('constraints', '')}
-""")
-
+    RAPPEL FINAL : Génère UNIQUEMENT le prompt. Ne réponds PAS à la tâche.""")
+    
     try:
         response = llm.invoke([system, human])
         full_prompt = response.content.strip()
