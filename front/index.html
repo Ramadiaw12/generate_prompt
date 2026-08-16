@@ -1976,6 +1976,13 @@ async function loadCollections() {
       };
       colDiv.appendChild(item);
     });
+    // Bouton créer nouveau dossier
+    const newFolderBtn = document.createElement('button');
+    newFolderBtn.className = 'new-folder-btn';
+    newFolderBtn.innerHTML = '📁 + Nouveau dossier';
+    newFolderBtn.onclick = openFolderModal;
+    colDiv.appendChild(newFolderBtn);
+
     list.appendChild(colDiv);
   } catch(err) { console.error('loadCollections:', err); }
 }
