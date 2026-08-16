@@ -1744,13 +1744,13 @@ function updateIALaunchers(promptText) {
   if (!promptText) return;
   const encoded = encodeURIComponent(promptText);
 
-  // ChatGPT, Claude, Perplexity, Mistral — pré-remplissage natif
+  // ChatGPT, Claude, Perplexity, Mistral  pré-remplissage natif
   document.getElementById('btn-chatgpt').href    = 'https://chatgpt.com/?q=' + encoded;
   document.getElementById('btn-claude').href     = 'https://claude.ai/new?q=' + encoded;
   document.getElementById('btn-perplexity').href = 'https://www.perplexity.ai/?q=' + encoded;
   document.getElementById('btn-mistral').href    = 'https://chat.mistral.ai/chat?q=' + encoded;
 
-  // Gemini — copie + ouvre
+  // Gemini  copie + ouvre
   const gemBtn = document.getElementById('btn-gemini');
   gemBtn.href = '#';
   gemBtn.onclick = (e) => {
@@ -1901,7 +1901,7 @@ document.getElementById('user-input-field').value = '';
 document.getElementById('results-section').classList.remove('show');
 
 // 
-// MÉMOIRE INTELLIGENTE — favoris + collections
+// MÉMOIRE INTELLIGENTE  favoris + collections
 // 
 let currentTab = 'all';
 
@@ -2005,12 +2005,12 @@ async function toggleFavorite(promptId, btn) {
 }
 
 
-// ═══════════════════════════════════════════════
+// 
 // DOSSIERS + FAVORIS
-// ═══════════════════════════════════════════════
+// 
 let userFolders = JSON.parse(localStorage.getItem('pc_folders') || '["général"]');
 
-// ── Dossiers ──────────────────────────────────
+//  Dossiers 
 
 function openFolderModal() {
   document.getElementById('folder-modal-overlay').classList.add('open');
@@ -2041,7 +2041,7 @@ function createFolder() {
   showToast('📁 Dossier "' + name + '" créé !');
 }
 
-// ── Déplacer un prompt vers un dossier ────────
+//  Déplacer un prompt vers un dossier 
 
 async function moveToFolder(promptId, folderName, dropdownEl) {
   try {
@@ -2063,7 +2063,7 @@ async function moveToFolder(promptId, folderName, dropdownEl) {
   } catch(err) { console.error(err); }
 }
 
-// ── Toast notification ────────────────────────
+//  Toast notification 
 function showToast(message) {
   let toast = document.getElementById('pc-toast');
   if (!toast) {
@@ -2118,7 +2118,7 @@ document.getElementById('folder-name-input')?.addEventListener('keydown', (e) =>
 </footer>
 
 
-<!-- ── Folder Modal ── -->
+<!--  Folder Modal  -->
 <div class="folder-modal-overlay" id="folder-modal-overlay">
   <div class="folder-modal">
     <h3>📁 Nouveau dossier</h3>
