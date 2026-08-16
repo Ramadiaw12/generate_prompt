@@ -769,6 +769,78 @@ svg#flow{display:block;width:100%;overflow:visible;}
 [data-theme="dark"] .action-btn { background: #1a1814; }
 [data-theme="dark"] .collection-item { background: #111010; border-color: #2a2620; }
 [data-theme="dark"] .collection-item:hover { background: #2a1f10; border-color: var(--amber); }
+
+/* ── Folder Modal ── */
+.folder-modal-overlay {
+  position: fixed; inset: 0; background: rgba(26,22,18,.5);
+  backdrop-filter: blur(8px); z-index: 400;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.folder-modal-overlay.open { opacity: 1; pointer-events: all; }
+.folder-modal {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 20px; padding: 1.8rem; width: 90%; max-width: 380px;
+  box-shadow: var(--shadow-lg);
+  transform: translateY(20px) scale(.96);
+  transition: transform .25s cubic-bezier(.22,1,.36,1);
+}
+.folder-modal-overlay.open .folder-modal { transform: translateY(0) scale(1); }
+.folder-modal h3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 1.1rem; color: var(--ink); margin-bottom: 1rem;
+}
+.folder-input {
+  width: 100%; font-family: 'Instrument Sans', sans-serif;
+  font-size: .88rem; color: var(--ink); background: var(--bg);
+  border: 1.5px solid var(--border); border-radius: 10px;
+  padding: .65em .9em; outline: none; margin-bottom: 1rem;
+  transition: border-color .18s;
+}
+.folder-input:focus { border-color: var(--amber); }
+.folder-modal-btns { display: flex; gap: .5rem; justify-content: flex-end; }
+.folder-btn {
+  font-family: 'Instrument Sans', sans-serif; font-size: .82rem;
+  font-weight: 600; padding: .5em 1.2em; border-radius: 100px;
+  border: none; cursor: pointer; transition: all .18s;
+}
+.folder-btn.cancel { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
+.folder-btn.confirm { background: var(--amber); color: #fff; }
+.folder-btn.confirm:hover { background: #c9620a; }
+
+/* Bouton nouveau dossier */
+.new-folder-btn {
+  width: calc(100% - 2rem); margin: .5rem 1rem;
+  display: flex; align-items: center; gap: .5rem;
+  padding: .6rem .9rem; border-radius: 10px;
+  border: 1.5px dashed var(--border); background: transparent;
+  color: var(--muted); cursor: pointer; font-size: .82rem;
+  font-family: 'Instrument Sans', sans-serif;
+  transition: all .18s;
+}
+.new-folder-btn:hover { border-color: var(--amber); color: var(--amber); }
+
+/* Dropdown déplacer vers dossier */
+.move-dropdown {
+  position: absolute; top: 2rem; right: 0;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 10px; padding: .4rem;
+  box-shadow: var(--shadow-md); z-index: 200;
+  min-width: 160px; display: none;
+}
+.move-dropdown.open { display: block; }
+.move-option {
+  font-size: .78rem; color: var(--ink); padding: .4rem .7rem;
+  border-radius: 6px; cursor: pointer; transition: background .15s;
+  white-space: nowrap;
+}
+.move-option:hover { background: var(--amber-lt); color: var(--amber); }
+
+[data-theme="dark"] .folder-modal { background: #1a1814; border-color: #2a2620; }
+[data-theme="dark"] .folder-input { background: #111010; color: #f0ece4; border-color: #2a2620; }
+[data-theme="dark"] .move-dropdown { background: #1a1814; border-color: #2a2620; }
+[data-theme="dark"] .move-option:hover { background: #2a1f10; }
+[data-theme="dark"] .new-folder-btn { border-color: #2a2620; color: var(--muted); }
 </style>
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 
@@ -1941,5 +2013,24 @@ async function toggleFavorite(promptId, btn) {
   </div>
 </footer>
 
+
+<!-- ── Folder Modal ── -->
+<div class="folder-modal-overlay" id="folder-modal-overlay">
+  <div class="folder-modal">
+    <h3>📁 Nouveau dossier</h3>
+    <input
+      class="folder-input" id="folder-name-input"
+      placeholder="Ex: Marketing, Code, Personnel..."
+      maxlength="50"
+    />
+    <div style="font-size:.72rem;color:var(--muted);margin-bottom:1rem;">
+      Les prompts pourront être déplacés dans ce dossier.
+    </div>
+    <div class="folder-modal-btns">
+      <button class="folder-btn cancel" onclick="closeFolderModal()">Annuler</button>
+      <button class="folder-btn confirm" onclick="createFolder()">Créer le dossier</button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
