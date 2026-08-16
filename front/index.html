@@ -1943,39 +1943,72 @@ async function loadCollections() {
   const empty = document.getElementById('history-empty');
   list.innerHTML = '';
   empty.style.display = 'none';
+
   try {
+    // Récupère les collections depuis l'API
     const res = await fetch(`${API}/my-collections`, {
       headers: { 'Authorization': `Bearer ${authToken}` }
     });
     const data = await res.json();
-    const cols = data.collections || {};
-    if (Object.keys(cols).length === 0) { empty.style.display = 'flex'; return; }
-    const icons = {'général':'📋','marketing':'📈','code':'💻','rédaction':'✍️','data':'📊','business':'💼','éducation':'🎓','créativité':'🎨'};
+    const apiCols = data.collections || {};
+
+    // Fusionne avec les dossiers créés en localStorage
+    const localFolders = JSON.parse(localStorage.getItem('pc_folders') || '["général"]');
+    
+    // Combine les deux sources
+    const allCols = { ...apiCols };
+    localFolders.forEach(f => {
+      if (!allCols[f]) allCols[f] = 0;
+    });
+
+    const icons = {
+      'général':'📋','marketing':'📈','code':'💻',
+      'rédaction':'✍️','data':'📊','business':'💼',
+      'éducation':'🎓','créativité':'🎨','personnel':'👤',
+      'travail':'💼','projet':'🚀'
+    };
+
     const colDiv = document.createElement('div');
     colDiv.style.cssText = 'padding:.8rem 1rem;display:flex;flex-direction:column;gap:.5rem;';
-    Object.entries(cols).forEach(([name, count]) => {
+
+    Object.entries(allCols).forEach(([name, count]) => {
       const icon = icons[name.toLowerCase()] || '📁';
       const item = document.createElement('div');
       item.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:.7rem .9rem;border-radius:10px;background:var(--bg);border:1px solid var(--border);cursor:pointer;transition:all .18s;';
       item.onmouseenter = () => { item.style.borderColor='var(--amber)'; item.style.background='var(--amber-lt)'; };
       item.onmouseleave = () => { item.style.borderColor='var(--border)'; item.style.background='var(--bg)'; };
+
+      const left = document.createElement('div');
+      left.style.cssText = 'display:flex;align-items:center;gap:.5rem;';
+
       const nameEl = document.createElement('span');
       nameEl.style.cssText = 'font-size:.84rem;color:var(--ink);font-weight:500;';
       nameEl.textContent = icon + ' ' + name;
+
       const countEl = document.createElement('span');
       countEl.style.cssText = 'font-family:"DM Mono",monospace;font-size:.62rem;color:var(--muted);background:var(--border);padding:.2em .6em;border-radius:100px;';
       countEl.textContent = count + ' prompt' + (count > 1 ? 's' : '');
-      item.appendChild(nameEl);
+
+      left.appendChild(nameEl);
+      item.appendChild(left);
       item.appendChild(countEl);
+
+      // Clic → filtre les prompts de ce dossier
       item.onclick = () => {
-        const filtered = allPrompts.filter(p => (p.collection||'général') === name);
+        const filtered = allPrompts.filter(p =>
+          (p.collection || 'général') === name
+        );
         switchHistoryTab('all');
         renderHistoryList(filtered);
         const s = document.getElementById('history-search');
         if (s) s.value = name;
+        // Toast pour indiquer le filtre
+        showToast(icon + ' ' + name + ' — ' + count + ' prompt' + (count > 1 ? 's' : ''));
       };
+
       colDiv.appendChild(item);
     });
+
     // Bouton créer nouveau dossier
     const newFolderBtn = document.createElement('button');
     newFolderBtn.className = 'new-folder-btn';
@@ -1984,7 +2017,28 @@ async function loadCollections() {
     colDiv.appendChild(newFolderBtn);
 
     list.appendChild(colDiv);
-  } catch(err) { console.error('loadCollections:', err); }
+
+  } catch(err) {
+    console.error('loadCollections:', err);
+    // Affiche quand même les dossiers locaux même si API échoue
+    const localFolders = JSON.parse(localStorage.getItem('pc_folders') || '["général"]');
+    if (localFolders.length > 0) {
+      const colDiv = document.createElement('div');
+      colDiv.style.cssText = 'padding:.8rem 1rem;display:flex;flex-direction:column;gap:.5rem;';
+      localFolders.forEach(name => {
+        const item = document.createElement('div');
+        item.style.cssText = 'padding:.7rem .9rem;border-radius:10px;background:var(--bg);border:1px solid var(--border);font-size:.84rem;color:var(--ink);';
+        item.textContent = '📁 ' + name;
+        colDiv.appendChild(item);
+      });
+      const newFolderBtn = document.createElement('button');
+      newFolderBtn.className = 'new-folder-btn';
+      newFolderBtn.innerHTML = '📁 + Nouveau dossier';
+      newFolderBtn.onclick = openFolderModal;
+      colDiv.appendChild(newFolderBtn);
+      list.appendChild(colDiv);
+    }
+  }
 }
 
 async function toggleFavorite(promptId, btn) {
