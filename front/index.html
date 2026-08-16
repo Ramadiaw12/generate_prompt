@@ -1997,6 +1997,103 @@ async function toggleFavorite(promptId, btn) {
   } catch(err) { console.error('toggleFavorite:', err); }
 }
 
+
+// ═══════════════════════════════════════════════
+// DOSSIERS + FAVORIS
+// ═══════════════════════════════════════════════
+let userFolders = JSON.parse(localStorage.getItem('pc_folders') || '["général"]');
+
+// ── Dossiers ──────────────────────────────────
+
+function openFolderModal() {
+  document.getElementById('folder-modal-overlay').classList.add('open');
+  document.getElementById('folder-name-input').value = '';
+  document.getElementById('folder-name-input').focus();
+}
+
+function closeFolderModal() {
+  document.getElementById('folder-modal-overlay').classList.remove('open');
+}
+
+function createFolder() {
+  const name = document.getElementById('folder-name-input').value.trim();
+  if (!name) return;
+
+  // Sauvegarde en localStorage
+  if (!userFolders.includes(name)) {
+    userFolders.push(name);
+    localStorage.setItem('pc_folders', JSON.stringify(userFolders));
+  }
+
+  closeFolderModal();
+
+  // Rafraîchit l'onglet collections
+  if (currentTab === 'collections') loadCollections();
+
+  // Feedback
+  showToast('📁 Dossier "' + name + '" créé !');
+}
+
+// ── Déplacer un prompt vers un dossier ────────
+
+async function moveToFolder(promptId, folderName, dropdownEl) {
+  try {
+    const res = await fetch(`${API}/my-prompts/${promptId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ collection: folderName })
+    });
+    if (res.ok) {
+      const p = allPrompts.find(x => x.id === promptId);
+      if (p) p.collection = folderName;
+      if (dropdownEl) dropdownEl.classList.remove('open');
+      showToast('📁 Déplacé vers "' + folderName + '"');
+      renderHistoryList(allPrompts);
+    }
+  } catch(err) { console.error(err); }
+}
+
+// ── Toast notification ────────────────────────
+function showToast(message) {
+  let toast = document.getElementById('pc-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'pc-toast';
+    toast.style.cssText = `
+      position:fixed; bottom:1.5rem; left:50%; transform:translateX(-50%);
+      background:var(--ink); color:#fff; padding:.6rem 1.2rem;
+      border-radius:100px; font-family:'DM Mono',monospace;
+      font-size:.72rem; z-index:999; opacity:0;
+      transition:opacity .25s; white-space:nowrap;
+      box-shadow:var(--shadow-md);
+    `;
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.style.opacity = '1';
+  setTimeout(() => { toast.style.opacity = '0'; }, 2500);
+}
+
+// Ferme dropdown si clic dehors
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.move-dropdown') && !e.target.closest('.move-btn')) {
+    document.querySelectorAll('.move-dropdown.open').forEach(d => d.classList.remove('open'));
+  }
+});
+
+// Ferme modal dossier si clic dehors
+document.getElementById('folder-modal-overlay')?.addEventListener('click', (e) => {
+  if (e.target === document.getElementById('folder-modal-overlay')) closeFolderModal();
+});
+
+// Enter pour créer dossier
+document.getElementById('folder-name-input')?.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') createFolder();
+});
+
 </script>
 
 <!--  Footer  -->
