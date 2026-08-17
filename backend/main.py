@@ -42,10 +42,10 @@ async def lifespan(app: FastAPI):
     global graph
     create_tables()
     graph = build_graph()
-    print("✅ Tables PostgreSQL créées / vérifiées.")
-    print("✅ Agent graph compilé et prêt.")
+    print("Tables PostgreSQL créées / vérifiées.")
+    print("Agent graph compilé et prêt.")
     yield
-    print("🛑 Arrêt du serveur.")
+    print("Arrêt du serveur.")
 
 #  App 
 app = FastAPI(
