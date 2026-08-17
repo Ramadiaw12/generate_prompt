@@ -319,7 +319,7 @@ POSTGRES_PASSWORD=yourstrongpassword
 DATABASE_URL=....localhost/promptcraft
 # With Docker ("db" = Docker service name)
 
-# ── JWT 
+# JWT 
 # Generate with: openssl rand -hex 32
 SECRET_KEY=your-secret-key-here
 
@@ -372,7 +372,7 @@ username=user@example.com&password=mypassword
 ```jsonc
 // Response 200
 {
-  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "access_token": "xxxxxxxx...",
   "token_type": "bearer"
 }
 ```
