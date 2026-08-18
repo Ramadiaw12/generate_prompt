@@ -54,14 +54,13 @@ services:
       # Expose le port PostgreSQL sur votre machine locale
       # Format : "port_local:port_conteneur"
       # Utile pour se connecter avec un client DB (DBeaver, pgAdmin)
-      # En production : supprimez cette ligne (ne pas exposer la DB publiquement)
 
     healthcheck:
       # Vérifie que PostgreSQL est prêt à accepter des connexions
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-promptuser} -d ${POSTGRES_DB:-promptcraft}"]
       interval: 10s    # vérifie toutes les 10 secondes
       timeout: 5s      # attend max 5 secondes
-      retries: 5       # 5 échecs → service "unhealthy"
+      retries: 5       # 5 échecs : service "unhealthy"
       start_period: 10s # attend 10s avant le premier check
 
     networks:
@@ -87,7 +86,6 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-promptuser}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-promptcraft}
       # "db" = nom du service PostgreSQL ci-dessus
       # Docker Compose résout automatiquement "db" vers l'IP du conteneur PostgreSQL
-      # C'est la magie du réseau Docker interne !
 
       GROQ_API_KEY: ${GROQ_API_KEY}
       # Clé API Groq — lue depuis .env
@@ -103,12 +101,11 @@ services:
       db:
         condition: service_healthy
         # Le backend démarre UNIQUEMENT quand PostgreSQL est "healthy"
-        # Évite les erreurs "connexion refusée" au démarrage
 
     volumes:
       - ./backend:/app
       # Monte le dossier backend/ local dans /app du conteneur
-      # Permet le hot-reload en développement : modifiez le code → l'API se recharge
+      # Permet le hot-reload en développement : modifiez le code : l'API se recharge
 
     networks:
       - promptcraft_network
@@ -117,7 +114,6 @@ services:
   frontend:
     image: nginx:alpine
     # Nginx = serveur web ultra-performant pour servir les fichiers statiques
-    # Beaucoup plus robuste que "python -m http.server" pour la production
 
     container_name: promptcraft_frontend
 
@@ -127,12 +123,12 @@ services:
       - "3000:80"
       # Nginx écoute sur le port 80 dans le conteneur
       # On le mappe sur le port 3000 de votre machine
-      # → http://localhost:3000
+      #  http://localhost:3000
 
     volumes:
       - ./front:/usr/share/nginx/html:ro
       # Monte le dossier front/ dans le dossier de fichiers statiques de Nginx
-      # :ro = read-only (Nginx n'a pas besoin d'écrire)
+      # :ro = read-only 
 
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       # Configuration Nginx personnalisée (créée juste après)
@@ -158,4 +154,3 @@ networks:
     driver: bridge
     # Réseau bridge = réseau virtuel isolé
     # Les conteneurs communiquent par leur nom de service (db, backend, frontend)
-    # Isolé du réseau de votre machine → sécurité
